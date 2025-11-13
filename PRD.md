@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
-## AI-Powered Automation Platform (n8n-like)
+## AI-Powered Automation Platform
 
 **Version:** 1.0  
-**Date:** 2024  
+**Date:** 2025  
 **Status:** In Development
 
 ---
@@ -705,14 +705,13 @@ An automation platform that allows users to build, execute, and monitor workflow
 - **SSO**: Single Sign-On
 
 ### 10.2 References
-- n8n Documentation
 - LangChain Documentation
 - React Flow Documentation
 - Temporal.io Documentation
 - OpenAI API Documentation
 
 ### 10.3 Change Log
-- **v1.0** (2024): Initial PRD creation
+- **v1.0** (2025): Initial PRD creation
 
 ---
 
