@@ -10,6 +10,7 @@ import { guardrailsService } from '../guardrailsService';
 import { langfuseService } from '../langfuseService';
 import { archGWService } from '../archGWService';
 import { rateLimitService } from '../rateLimitService';
+import { retryService } from '../retryService';
 import { eq } from 'drizzle-orm';
 
 export async function executeLLM(context: NodeExecutionContext): Promise<NodeExecutionResult> {
@@ -526,21 +527,63 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
     }
 
     const llmStartTime = new Date();
-    const result = await aiService.generateText({
-      prompt,
-      config: {
-        provider,
-        model: modelName,
-        temperature: nodeConfig.temperature || 0.7,
-        maxTokens: nodeConfig.maxTokens || 1000,
-        systemPrompt: nodeConfig.systemPrompt,
+    
+    // Check if StackStorm retry is enabled
+    const enableStackStormRetry = await featureFlagService.isEnabled(
+      'enable_stackstorm_retry',
+      context.userId,
+      (context as any).workspaceId
+    );
+
+    // Execute LLM call with retry logic (StackStorm if enabled, otherwise simple retry)
+    const retryResult = await retryService.executeWithRetry(
+      async () => {
+        return await aiService.generateText({
+          prompt,
+          config: {
+            provider,
+            model: modelName,
+            temperature: nodeConfig.temperature || 0.7,
+            maxTokens: nodeConfig.maxTokens || 1000,
+            systemPrompt: nodeConfig.systemPrompt,
+          },
+          variables: {
+            ...input,
+            context: input.context,
+          },
+        });
       },
-      variables: {
-        ...input,
-        context: input.context,
-      },
-    });
+      {
+        maxRetries: nodeConfig.maxRetries || 3,
+        initialDelay: nodeConfig.retryDelay || 1000,
+        useStackStorm: enableStackStormRetry,
+        userId: context.userId,
+        workspaceId: (context as any).workspaceId,
+        fallbackModels: nodeConfig.fallbackModels || [],
+      }
+    );
     const llmEndTime = new Date();
+
+    // Handle retry result
+    if (!retryResult.success) {
+      // Retry failed, throw error to be caught by outer catch block
+      throw retryResult.error || new Error('LLM execution failed after retries');
+    }
+
+    const result = retryResult.result!;
+
+    // Add retry metadata to span
+    if (retryResult.attempts > 1) {
+      span.setAttributes({
+        'llm.retry_attempts': retryResult.attempts,
+        'llm.retry_used_stackstorm': enableStackStormRetry && retryResult.executionId ? true : false,
+      });
+      if (retryResult.executionId) {
+        span.setAttributes({
+          'stackstorm.execution_id': retryResult.executionId,
+        });
+      }
+    }
 
     // Calculate cost details using cost calculation service
     // tokensUsed can be a number or an object with input/output
