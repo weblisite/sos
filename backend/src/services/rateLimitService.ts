@@ -15,6 +15,7 @@
 
 import Redis from 'ioredis';
 import { createId } from '@paralleldrive/cuid2';
+import { redis as sharedRedis } from '../config/redis';
 
 /**
  * Rate limit configuration
@@ -103,35 +104,27 @@ export class RateLimitService {
   private inMemoryStore: Map<string, { count: number; resetAt: number }> = new Map();
 
   constructor() {
-    // Initialize Redis connection if available
-    const redisUrl = process.env.REDIS_URL;
-    if (redisUrl) {
-      try {
-        this.redis = new Redis(redisUrl, {
-          maxRetriesPerRequest: 3,
-          retryStrategy: (times) => {
-            const delay = Math.min(times * 50, 2000);
-            return delay;
-          },
-        });
-
-        this.redis.on('error', (error) => {
-          console.warn('[RateLimit] Redis error:', error);
-          this.enabled = false;
-        });
-
-        this.redis.on('connect', () => {
-          this.enabled = true;
-          console.log('✅ Rate limiting service initialized with Redis');
-        });
-
+    // Use shared Redis connection if available
+    try {
+      // Check if shared Redis is available and connected
+      if (sharedRedis && sharedRedis.status === 'ready') {
+        this.redis = sharedRedis;
         this.enabled = true;
-      } catch (error: any) {
-        console.warn('[RateLimit] Failed to connect to Redis, using in-memory store:', error.message);
-        this.enabled = false;
+        console.log('✅ Rate limiting service initialized with shared Redis');
+      } else {
+        // Try to use shared Redis anyway (it might connect later)
+        this.redis = sharedRedis;
+        this.enabled = !!process.env.REDIS_URL;
+        
+        if (this.enabled) {
+          console.log('✅ Rate limiting service initialized with shared Redis (connecting...)');
+        } else {
+          console.log('⚠️ Rate limiting using in-memory store (REDIS_URL not set)');
+        }
       }
-    } else {
-      console.log('⚠️ Rate limiting using in-memory store (REDIS_URL not set)');
+    } catch (error: any) {
+      console.warn('[RateLimit] Failed to use shared Redis, using in-memory store:', error.message);
+      this.enabled = false;
     }
   }
 
