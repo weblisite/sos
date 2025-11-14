@@ -167,10 +167,6 @@ export class ObservabilityService {
 
       // Export to Langfuse (async, non-blocking)
       if (langfuseService.isEnabled() && agentId && query && executionId) {
-        // Extract intermediateSteps from context if available
-        const contextData = context as any;
-        const intermediateSteps = contextData?.executionNodes || contextData?.intermediateSteps || [];
-
         langfuseService.exportAgentExecution({
           traceId: finalTraceId,
           agentId,
@@ -197,7 +193,7 @@ export class ObservabilityService {
             duration,
             latencyMs: duration,
           },
-          intermediateSteps: intermediateSteps.length > 0 ? intermediateSteps : undefined,
+          intermediateSteps: extractedIntermediateSteps.length > 0 ? extractedIntermediateSteps : undefined,
         }).catch((err: any) => {
           // Log but don't throw - Langfuse export should not break execution
           console.warn('[Observability] Langfuse export failed:', err);
