@@ -1,6 +1,6 @@
 import { db } from '../config/database';
 import { codeExecLogs } from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 
 /**
  * Code Execution Logger
@@ -69,11 +69,12 @@ export class CodeExecutionLogger {
     limit: number = 100
   ): Promise<typeof codeExecLogs.$inferSelect[]> {
     try {
-      return await db.query.codeExecLogs.findMany({
-        where: eq(codeExecLogs.codeAgentId, codeAgentId),
-        orderBy: (logs, { desc }) => [desc(logs.createdAt)],
-        limit,
-      });
+      return await db
+        .select()
+        .from(codeExecLogs)
+        .where(eq(codeExecLogs.codeAgentId, codeAgentId))
+        .orderBy(desc(codeExecLogs.createdAt))
+        .limit(limit);
     } catch (error: any) {
       console.error('Failed to get agent logs:', error);
       return [];
@@ -87,10 +88,11 @@ export class CodeExecutionLogger {
     workflowExecutionId: string
   ): Promise<typeof codeExecLogs.$inferSelect[]> {
     try {
-      return await db.query.codeExecLogs.findMany({
-        where: eq(codeExecLogs.workflowExecutionId, workflowExecutionId),
-        orderBy: (logs, { desc }) => [desc(logs.createdAt)],
-      });
+      return await db
+        .select()
+        .from(codeExecLogs)
+        .where(eq(codeExecLogs.workflowExecutionId, workflowExecutionId))
+        .orderBy(desc(codeExecLogs.createdAt));
     } catch (error: any) {
       console.error('Failed to get workflow execution logs:', error);
       return [];

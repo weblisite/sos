@@ -46,8 +46,6 @@ interface ConnectorManagerProps {
 export default function ConnectorManager({ onClose, onSelectConnector }: ConnectorManagerProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedConnector, setSelectedConnector] = useState<ConnectorManifest | null>(null);
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const [connectingConnector, setConnectingConnector] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: connectors, isLoading: loadingConnectors } = useQuery({
@@ -131,8 +129,8 @@ export default function ConnectorManager({ onClose, onSelectConnector }: Connect
         alert(`Failed to initiate connection: ${error.response?.data?.error || error.message}`);
       }
     } else if (connector.auth.type === 'api_key') {
-      setConnectingConnector(connector.id);
-      setShowConnectModal(true);
+      // TODO: Implement API key input modal
+      alert(`Please configure ${connector.name} API key manually. This feature is coming soon.`);
     }
   };
 
