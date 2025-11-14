@@ -413,6 +413,37 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
       // Don't throw - observability should not break execution
     }
 
+    // Export to Langfuse (async, non-blocking)
+    if (langfuseService.isEnabled()) {
+      langfuseService.exportLLMCall({
+        traceId: spanContext.traceId,
+        spanId: spanContext.spanId,
+        parentSpanId: spanContext.parentSpanId,
+        provider,
+        model: modelName,
+        prompt: typeof prompt === 'string' ? prompt : JSON.stringify(prompt),
+        response: typeof result.content === 'string' ? result.content : JSON.stringify(result.content || result),
+        startTime: llmStartTime,
+        endTime: llmEndTime,
+        cost,
+        tokens: {
+          prompt: inputTokens,
+          completion: outputTokens,
+          total: totalTokens,
+        },
+        metadata: {
+          temperature: nodeConfig.temperature || 0.7,
+          maxTokens: nodeConfig.maxTokens || 1000,
+          userId: context.userId,
+          workspaceId: (context as any).workspaceId,
+          organizationId: (context as any).organizationId,
+        },
+      }).catch((err: any) => {
+        // Log but don't throw - Langfuse export should not break execution
+        console.warn('[LLM Executor] Langfuse export failed:', err);
+      });
+    }
+
     return {
       success: true,
       output: {
@@ -431,6 +462,7 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
     };
   } catch (error: any) {
     const latencyMs = Date.now() - startTime;
+    const llmEndTime = new Date();
 
     // Update span with error
     span.setAttributes({
@@ -445,6 +477,30 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
       message: error.message || 'LLM execution failed',
     });
     span.end();
+
+    // Export error to Langfuse (async, non-blocking)
+    if (langfuseService.isEnabled()) {
+      langfuseService.exportLLMCall({
+        traceId: spanContext.traceId,
+        spanId: spanContext.spanId,
+        parentSpanId: spanContext.parentSpanId,
+        provider,
+        model: modelName,
+        prompt: typeof prompt === 'string' ? prompt : JSON.stringify(prompt),
+        startTime: llmStartTime,
+        endTime: llmEndTime,
+        error: error.message || 'LLM execution failed',
+        metadata: {
+          temperature: nodeConfig.temperature || 0.7,
+          maxTokens: nodeConfig.maxTokens || 1000,
+          userId: context.userId,
+          workspaceId: (context as any).workspaceId,
+          organizationId: (context as any).organizationId,
+        },
+      }).catch((err: any) => {
+        console.warn('[LLM Executor] Langfuse export failed:', err);
+      });
+    }
 
     return {
       success: false,
