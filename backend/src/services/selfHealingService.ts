@@ -2,6 +2,9 @@ import { Queue, Worker, Job } from 'bullmq';
 import { AgentResponse } from './agentService';
 import { langchainService } from './langchainService';
 import { redis } from '../config/redis';
+import { stackstormBullMQIntegration } from './stackstormBullMQIntegration';
+import { stackstormConfig } from '../config/stackstorm';
+import { featureFlagService } from './featureFlagService';
 
 /**
  * Self-Healing Service
