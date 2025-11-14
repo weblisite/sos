@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { api } from '../lib/api';
+import api from '../lib/api';
 
 interface Trace {
   id: string;
@@ -161,6 +161,34 @@ export const TraceViewer: React.FC<TraceViewerProps> = ({
     return new Date(dateString).toLocaleString();
   };
 
+  const exportTraceAsJSON = async (trace: Trace) => {
+    try {
+      const response = await api.get(`/observability/traces/${trace.id}/export`, {
+        responseType: 'blob',
+      });
+      
+      // Convert blob to text and parse JSON
+      const text = await response.data.text();
+      const jsonData = JSON.parse(text);
+      
+      // Create blob with formatted JSON
+      const blob = new Blob([JSON.stringify(jsonData, null, 2)], {
+        type: 'application/json',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `trace-${trace.id}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to export trace');
+      console.error('Error exporting trace:', err);
+    }
+  };
+
   return (
     <div className="trace-viewer">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -262,17 +290,27 @@ export const TraceViewer: React.FC<TraceViewerProps> = ({
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">Trace Details</h5>
-                <span
-                  className={`badge ${
-                    selectedTrace.status === 'success'
-                      ? 'bg-success'
-                      : selectedTrace.status === 'error'
-                      ? 'bg-danger'
-                      : 'bg-secondary'
-                  }`}
-                >
-                  {selectedTrace.status}
-                </span>
+                <div className="d-flex gap-2 align-items-center">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => exportTraceAsJSON(selectedTrace)}
+                    title="Export trace as JSON"
+                  >
+                    <i className="bi bi-download me-1"></i>
+                    Export JSON
+                  </button>
+                  <span
+                    className={`badge ${
+                      selectedTrace.status === 'success'
+                        ? 'bg-success'
+                        : selectedTrace.status === 'error'
+                        ? 'bg-danger'
+                        : 'bg-secondary'
+                    }`}
+                  >
+                    {selectedTrace.status}
+                  </span>
+                </div>
               </div>
               <div className="card-body">
                 <div className="row mb-3">

@@ -226,6 +226,7 @@ router.get('/traces/:traceId', async (req: AuthRequest, res) => {
             completion: Math.floor(context.tokensUsed * 0.3),
           }
         : undefined,
+      thoughts: context.intermediateSteps || [],
       spans: events
         .filter((e) => e.eventType !== 'agent_execution')
         .map((event) => {
@@ -246,6 +247,113 @@ router.get('/traces/:traceId', async (req: AuthRequest, res) => {
   } catch (error: any) {
     console.error('Error fetching trace:', error);
     res.status(500).json({ message: 'Failed to fetch trace', error: error.message });
+  }
+});
+
+/**
+ * GET /api/v1/observability/traces/:traceId/export
+ * Export trace as JSON file
+ */
+router.get('/traces/:traceId/export', async (req: AuthRequest, res) => {
+  try {
+    if (!req.user || !req.organizationId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { traceId } = req.params;
+    const user = req.user;
+
+    // Query all events for this trace
+    const conditions = [eq(eventLogs.traceId, traceId)];
+
+    if (user.workspaceId) {
+      conditions.push(eq(eventLogs.workspaceId, user.workspaceId));
+    }
+
+    const events = await db
+      .select()
+      .from(eventLogs)
+      .where(and(...conditions))
+      .orderBy(eventLogs.timestamp);
+
+    if (events.length === 0) {
+      return res.status(404).json({ message: 'Trace not found' });
+    }
+
+    // Find the main agent execution event
+    const mainEvent = events.find((e) => e.eventType === 'agent_execution') || events[0];
+    const context = (mainEvent.context as any) || {};
+
+    // Build comprehensive trace object for export
+    const traceExport = {
+      traceId: traceId,
+      exportedAt: new Date().toISOString(),
+      exportedBy: user.id,
+      trace: {
+        id: traceId,
+        name: `Agent Execution: ${context.framework || 'unknown'}`,
+        userId: mainEvent.userId || undefined,
+        sessionId: context.executionId || undefined,
+        startTime: mainEvent.timestamp.toISOString(),
+        endTime: mainEvent.timestamp.toISOString(),
+        duration: mainEvent.latencyMs || 0,
+        status: mainEvent.status === 'success' ? 'success' : 'error',
+        metadata: {
+          framework: context.framework,
+          agentId: context.agentId,
+          executionId: context.executionId,
+          query: context.query,
+          organizationId: req.organizationId,
+          workspaceId: user.workspaceId || undefined,
+        },
+        input: context.query ? { query: context.query } : undefined,
+        output: {
+          success: mainEvent.status === 'success',
+          error: context.error,
+        },
+        cost: context.cost,
+        tokens: context.tokensUsed
+          ? {
+              total: context.tokensUsed,
+              prompt: Math.floor(context.tokensUsed * 0.7),
+              completion: Math.floor(context.tokensUsed * 0.3),
+            }
+          : undefined,
+        thoughts: context.intermediateSteps || [],
+        spans: events
+          .filter((e) => e.eventType !== 'agent_execution')
+          .map((event) => {
+            const eventContext = (event.context as any) || {};
+            return {
+              id: event.id,
+              name: event.eventType,
+              startTime: event.timestamp.toISOString(),
+              endTime: event.timestamp.toISOString(),
+              duration: event.latencyMs || 0,
+              status: event.status === 'success' ? 'success' : 'error',
+              attributes: eventContext,
+            };
+          }),
+        rawEvents: events.map((event) => ({
+          id: event.id,
+          eventType: event.eventType,
+          timestamp: event.timestamp.toISOString(),
+          status: event.status,
+          latencyMs: event.latencyMs,
+          context: event.context,
+        })),
+      },
+    };
+
+    // Set headers for JSON file download
+    const filename = `trace-${traceId}-${new Date().toISOString().split('T')[0]}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.json(traceExport);
+  } catch (error: any) {
+    console.error('Error exporting trace:', error);
+    res.status(500).json({ message: 'Failed to export trace', error: error.message });
   }
 });
 
