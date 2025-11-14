@@ -3,6 +3,9 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { setOrganization } from '../middleware/organization';
 import { auditLogMiddleware } from '../middleware/auditLog';
 import { observabilityService } from '../services/observabilityService';
+import { db } from '../config/database';
+import { eventLogs } from '../../drizzle/schema';
+import { eq, gte, and, desc } from 'drizzle-orm';
 
 const router = Router();
 
@@ -67,10 +70,15 @@ router.get('/errors', async (req: AuthRequest, res) => {
  * GET /api/v1/observability/traces
  * Get list of traces
  */
-router.get('/traces', authenticateToken, async (req, res) => {
+router.get('/traces', async (req: AuthRequest, res) => {
   try {
+    if (!req.user || !req.organizationId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { range = '24h', workspaceId, userId } = req.query;
-    const user = (req as any).user;
+    const user = req.user;
 
     // Calculate cutoff date
     const cutoffDate = new Date();
@@ -158,10 +166,15 @@ router.get('/traces', authenticateToken, async (req, res) => {
  * GET /api/v1/observability/traces/:traceId
  * Get specific trace details
  */
-router.get('/traces/:traceId', authenticateToken, async (req, res) => {
+router.get('/traces/:traceId', async (req: AuthRequest, res) => {
   try {
+    if (!req.user || !req.organizationId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { traceId } = req.params;
-    const user = (req as any).user;
+    const user = req.user;
 
     // Query all events for this trace
     const conditions = [eq(eventLogs.traceId, traceId)];
