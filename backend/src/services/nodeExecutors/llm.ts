@@ -110,6 +110,9 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
           enforceCompliance: nodeConfig.enforceCompliance !== false,
           allowModelDowngrade: nodeConfig.allowModelDowngrade !== false,
           strictCompliance: nodeConfig.strictCompliance === true,
+          enableReroute: nodeConfig.enableReroute !== false,
+          fallbackRegions: nodeConfig.fallbackRegions,
+          fallbackProviders: nodeConfig.fallbackProviders,
         });
 
         // Apply routing decision
@@ -629,8 +632,8 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
               );
 
               if (rerouteRetryResult.success) {
-                // Reroute succeeded, continue with result
-                const result = rerouteRetryResult.result!;
+                // Reroute succeeded, use the reroute result
+                retryResult = rerouteRetryResult;
                 
                 // Add reroute metadata
                 if (rerouteRetryResult.attempts > 1) {
@@ -638,13 +641,6 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
                     'llm.reroute_retry_attempts': rerouteRetryResult.attempts,
                   });
                 }
-
-                // Continue with successful result
-                // (result will be used below)
-                const llmEndTime = new Date();
-                // ... rest of the code will use this result
-                // We need to set result here and skip the error throw
-                // Actually, let me restructure this better
               } else {
                 // Reroute also failed, throw error
                 throw rerouteRetryResult.error || new Error('LLM execution failed after reroute and retries');

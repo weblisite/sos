@@ -107,6 +107,11 @@ export interface RoutingOptions {
   // Advanced options
   allowModelDowngrade?: boolean;
   strictCompliance?: boolean; // Fail if compliance cannot be met
+  enableReroute?: boolean; // Enable automatic rerouting on failure
+  
+  // Reroute configuration
+  fallbackRegions?: string[];
+  fallbackProviders?: LLMProvider[];
   
   // GuardrailsAI validation options
   validateInput?: boolean; // Validate input prompt
