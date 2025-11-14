@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { posthogService } from '../posthogService';
 import { featureFlagService } from '../featureFlagService';
+import { costLoggingService } from '../costLoggingService';
 
 // Dynamic imports for file parsing libraries
 let pdfParse: any = null;
@@ -508,6 +509,31 @@ export async function executeRAG(context: NodeExecutionContext): Promise<NodeExe
         maxTokens: 1000,
       },
     });
+
+    // Log cost for LLM call
+    const tokenUsage = llmResponse.metadata as any;
+    if (tokenUsage) {
+      await costLoggingService.logFromTokenUsage(
+        llmProvider as 'openai' | 'anthropic' | 'google',
+        model,
+        {
+          promptTokens: tokenUsage.tokenUsage?.promptTokens,
+          completionTokens: tokenUsage.tokenUsage?.completionTokens,
+          inputTokens: tokenUsage.tokenUsage?.inputTokens,
+          outputTokens: tokenUsage.tokenUsage?.outputTokens,
+          totalTokens: llmResponse.tokensUsed,
+        },
+        {
+          userId: context.userId || null,
+          workflowExecutionId: context.executionId || null,
+          nodeId: context.nodeId || null,
+          organizationId: (context as any).organizationId || null,
+          workspaceId: (context as any).workspaceId || null,
+          prompt: prompt.length > 1000 ? prompt.substring(0, 1000) + '...' : prompt,
+          response: llmResponse.content.length > 1000 ? llmResponse.content.substring(0, 1000) + '...' : llmResponse.content,
+        }
+      );
+    }
 
     let finalAnswer = llmResponse.content;
 

@@ -492,6 +492,29 @@ Thought:`;
         }
       );
 
+      // Log cost for agent LLM call
+      const { costLoggingService } = await import('./costLoggingService');
+      const tokenUsage = response.metadata as any;
+      if (tokenUsage?.tokenUsage || response.tokensUsed) {
+        await costLoggingService.logFromTokenUsage(
+          llm instanceof ChatOpenAI ? 'openai' : 'anthropic',
+          (llm as any).modelName || 'gpt-4',
+          {
+            promptTokens: tokenUsage?.tokenUsage?.promptTokens,
+            completionTokens: tokenUsage?.tokenUsage?.completionTokens,
+            inputTokens: tokenUsage?.tokenUsage?.inputTokens,
+            outputTokens: tokenUsage?.tokenUsage?.outputTokens,
+            totalTokens: response.tokensUsed,
+          },
+          {
+            userId: undefined, // Agent calls may not have user context
+            agentId: undefined, // Could be enhanced to track agent ID
+            prompt: prompt.length > 1000 ? prompt.substring(0, 1000) + '...' : prompt,
+            response: response.content.length > 1000 ? response.content.substring(0, 1000) + '...' : response.content,
+          }
+        );
+      }
+
       const responseMessage = new AIMessage(response.content);
       const newMessages = [...messages, responseMessage];
 

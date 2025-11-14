@@ -3,6 +3,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Document } from "@langchain/core/documents";
+import { costCalculationService } from "./costCalculationService";
 
 export interface LLMConfig {
   provider: 'openai' | 'anthropic' | 'google';
@@ -126,12 +127,32 @@ export class LangChainService {
       ? (tokenUsage.promptTokens || 0) + (tokenUsage.completionTokens || 0)
       : undefined;
 
+    // Calculate cost using cost calculation service
+    let cost = 0;
+    let costDetails = null;
+    if (tokenUsage) {
+      costDetails = costCalculationService.calculateFromTokenUsage(
+        config.provider,
+        config.model,
+        {
+          promptTokens: tokenUsage.promptTokens,
+          completionTokens: tokenUsage.completionTokens,
+          inputTokens: tokenUsage.inputTokens,
+          outputTokens: tokenUsage.outputTokens,
+          totalTokens: tokensUsed,
+        }
+      );
+      cost = costDetails.totalCost;
+    }
+
     return {
       content: response.content as string,
       tokensUsed,
+      cost,
       metadata: {
         model: config.model,
         provider: config.provider,
+        costDetails,
         ...response.response_metadata,
       },
     };
