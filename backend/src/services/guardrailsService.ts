@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { posthogService } from './posthogService';
 import { featureFlagService } from './featureFlagService';
+import { langchainService } from './langchainService';
+import { similarityService, SimilarityMethod } from './similarityService';
+import { db } from '../config/database';
+import { promptSimilarityLogs } from '../../drizzle/schema';
+import { createId } from '@paralleldrive/cuid2';
 
 /**
  * Guardrails Service
@@ -168,15 +173,31 @@ export class GuardrailsService {
   }
 
   /**
-   * Check prompt similarity (basic implementation)
-   * In production, this would use embeddings and vector similarity
+   * Generate embedding for a prompt
+   */
+  async generatePromptEmbedding(prompt: string): Promise<number[]> {
+    try {
+      return await langchainService.generateEmbedding(prompt);
+    } catch (error: any) {
+      console.error('[Guardrails] Failed to generate embedding:', error);
+      throw new Error(`Failed to generate embedding: ${error.message}`);
+    }
+  }
+
+  /**
+   * Check prompt similarity using embeddings and vector similarity
    */
   async checkPromptSimilarity(
     prompt: string,
     knownPrompts: string[] = [],
     userId?: string,
     organizationId?: string,
-    workspaceId?: string
+    workspaceId?: string,
+    threshold: number = 0.85,
+    method: SimilarityMethod = 'cosine',
+    workflowExecutionId?: string,
+    nodeId?: string,
+    traceId?: string
   ): Promise<SimilarityResult> {
     if (knownPrompts.length === 0) {
       return {
@@ -185,7 +206,119 @@ export class GuardrailsService {
       };
     }
 
-    // Simple word-based similarity (in production, use embeddings)
+    try {
+      // Generate embedding for the prompt
+      const promptEmbedding = await this.generatePromptEmbedding(prompt);
+
+      let maxSimilarity = 0;
+      let matchedPrompt: string | undefined;
+      let matchedEmbedding: number[] | undefined;
+
+      // Compare with each known prompt
+      for (const knownPrompt of knownPrompts) {
+        try {
+          // Generate embedding for known prompt
+          const knownEmbedding = await this.generatePromptEmbedding(knownPrompt);
+
+          // Calculate similarity
+          const similarityResult = similarityService.calculate(
+            promptEmbedding,
+            knownEmbedding,
+            method
+          );
+
+          const similarity = similarityResult.normalizedScore ?? similarityResult.score;
+
+          if (similarity > maxSimilarity) {
+            maxSimilarity = similarity;
+            matchedPrompt = knownPrompt;
+            matchedEmbedding = knownEmbedding;
+          }
+        } catch (error: any) {
+          console.warn(`[Guardrails] Failed to compare with known prompt: ${error.message}`);
+          // Continue with next prompt
+        }
+      }
+
+      const isSimilar = maxSimilarity >= threshold;
+      const matchedPrompts = matchedPrompt ? [matchedPrompt] : undefined;
+
+      // Log similarity check to database
+      try {
+        const enableLogging = await featureFlagService.isEnabled(
+          'enable_similarity_logging',
+          userId,
+          workspaceId
+        );
+
+        if (enableLogging) {
+          await db.insert(promptSimilarityLogs).values({
+            id: createId(),
+            userId: userId || null,
+            workflowExecutionId: workflowExecutionId || null,
+            nodeId: nodeId || null,
+            prompt,
+            promptEmbedding: promptEmbedding as any, // JSONB accepts arrays
+            similarityScore: maxSimilarity,
+            similarityScorePercent: Math.round(maxSimilarity * 100),
+            flaggedReference: matchedPrompt ? createId() : null, // Reference ID
+            flaggedContent: matchedPrompt || null,
+            flaggedContentEmbedding: matchedEmbedding as any || null,
+            actionTaken: isSimilar ? 'blocked' : 'allowed',
+            threshold,
+            method,
+            organizationId: organizationId || null,
+            workspaceId: workspaceId || null,
+            traceId: traceId || null,
+            timestamp: new Date(),
+            createdAt: new Date(),
+          });
+        }
+      } catch (error: any) {
+        console.error('[Guardrails] Failed to log similarity check:', error);
+        // Don't throw - logging failure shouldn't break execution
+      }
+
+      // Track prompt blocking in PostHog if blocked (if feature flag enabled)
+      if (isSimilar && userId && organizationId) {
+        const enableTracing = await featureFlagService.isEnabled(
+          'enable_guardrails_tracing',
+          userId,
+          workspaceId
+        );
+        
+        if (enableTracing) {
+          posthogService.trackPromptBlocked({
+            userId,
+            organizationId,
+            workspaceId: workspaceId || undefined,
+            matchScore: maxSimilarity,
+            source: 'prompt_similarity',
+            promptPreview: prompt.substring(0, 100),
+            reason: `Similar to known prompt (${(maxSimilarity * 100).toFixed(1)}% similarity)`,
+          });
+        }
+      }
+
+      return {
+        similar: isSimilar,
+        similarityScore: maxSimilarity,
+        matchedPrompts,
+      };
+    } catch (error: any) {
+      console.error('[Guardrails] Prompt similarity check failed:', error);
+      // Fallback to word-based similarity if embedding generation fails
+      return this.fallbackWordBasedSimilarity(prompt, knownPrompts);
+    }
+  }
+
+  /**
+   * Fallback word-based similarity (used when embedding generation fails)
+   */
+  private fallbackWordBasedSimilarity(
+    prompt: string,
+    knownPrompts: string[]
+  ): SimilarityResult {
     const promptWords = new Set(prompt.toLowerCase().split(/\s+/));
     let maxSimilarity = 0;
     const matchedPrompts: string[] = [];
@@ -205,31 +338,8 @@ export class GuardrailsService {
       }
     }
 
-    const isSimilar = maxSimilarity > 0.7;
-
-    // Track prompt blocking in PostHog if blocked (if feature flag enabled)
-    if (isSimilar && userId && organizationId) {
-      const enableTracing = await featureFlagService.isEnabled(
-        'enable_guardrails_tracing',
-        userId,
-        workspaceId
-      );
-      
-      if (enableTracing) {
-        posthogService.trackPromptBlocked({
-          userId,
-          organizationId,
-          workspaceId: workspaceId || undefined,
-          matchScore: maxSimilarity,
-          source: 'prompt_similarity',
-          promptPreview: prompt.substring(0, 100),
-          reason: `Similar to ${matchedPrompts.length} known prompt(s)`,
-        });
-      }
-    }
-
     return {
-      similar: isSimilar,
+      similar: maxSimilarity > 0.7,
       similarityScore: maxSimilarity,
       matchedPrompts: matchedPrompts.length > 0 ? matchedPrompts : undefined,
     };
