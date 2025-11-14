@@ -90,9 +90,15 @@ export class GuardrailsService {
   private blockedPatterns: RegExp[] = [];
   private suspiciousPatterns: RegExp[] = [];
   private knownAbusePatterns: RegExp[] = [];
+  private knownAbuseEmbeddings: Array<{ text: string; embedding: number[] }> = [];
+  private abusePatternCache: Map<string, number[]> = new Map();
 
   constructor() {
     this.initializePatterns();
+    // Initialize abuse patterns asynchronously (non-blocking)
+    this.initializeAbusePatterns().catch(err => {
+      console.warn('[Guardrails] Failed to initialize abuse patterns:', err);
+    });
   }
 
   /**
