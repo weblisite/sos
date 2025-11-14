@@ -73,6 +73,13 @@ export const TraceViewer: React.FC<TraceViewerProps> = ({
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>(propTimeRange || '24h');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Sync timeRange with prop
+  useEffect(() => {
+    if (propTimeRange && propTimeRange !== timeRange) {
+      setTimeRange(propTimeRange);
+    }
+  }, [propTimeRange]);
+
   // Load traces
   useEffect(() => {
     loadTraces();
