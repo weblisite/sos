@@ -128,6 +128,66 @@ export async function executeAgent(
     };
   }
 
+  // Guardrails: Check prompt similarity (if enabled)
+  try {
+    const enableSimilarityCheck = await featureFlagService.isEnabled(
+      'enable_prompt_similarity_check',
+      context.userId,
+      (context as any).workspaceId
+    );
+
+    if (enableSimilarityCheck) {
+      // Get known prompts from configuration or database
+      const knownPrompts = (nodeConfig.knownPrompts as string[]) || [];
+      const similarityThreshold = (nodeConfig.similarityThreshold as number) || 0.85;
+
+      if (knownPrompts.length > 0) {
+        const similarityResult = await guardrailsService.checkPromptSimilarity(
+          query,
+          knownPrompts,
+          context.userId || undefined,
+          (context as any).organizationId || undefined,
+          (context as any).workspaceId || undefined,
+          similarityThreshold,
+          'cosine',
+          context.executionId || undefined,
+          context.nodeId || undefined,
+          undefined // traceId can be added later if needed
+        );
+
+        if (similarityResult.similar) {
+          // Track prompt blocking in PostHog
+          if (context.userId && context.organizationId) {
+            posthogService.trackPromptBlocked({
+              userId: context.userId,
+              organizationId: context.organizationId,
+              workspaceId: (context as any).workspaceId || undefined,
+              matchScore: similarityResult.similarityScore,
+              source: 'prompt_similarity',
+              promptPreview: query.substring(0, 100),
+              reason: `Similar to known prompt (${(similarityResult.similarityScore * 100).toFixed(1)}% similarity)`,
+            });
+          }
+
+          return {
+            success: false,
+            error: {
+              message: `Prompt similarity check failed: prompt is too similar to known prompts (${(similarityResult.similarityScore * 100).toFixed(1)}% similarity)`,
+              code: 'PROMPT_SIMILARITY_ERROR',
+              details: {
+                similarityScore: similarityResult.similarityScore,
+                matchedPrompts: similarityResult.matchedPrompts,
+              },
+            },
+          };
+        }
+      }
+    }
+  } catch (error: any) {
+    console.warn('[Agent Executor] Prompt similarity check failed:', error);
+    // Continue execution if similarity check fails
+  }
+
   // Get routing heuristics (if provided) or use defaults
   const heuristics: RoutingHeuristics = (nodeConfig.routingHeuristics as RoutingHeuristics) || {
     agent_type: (nodeConfig.agentType as string) || 'simple',

@@ -23,57 +23,6 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
     };
   }
 
-  // Guardrails: Check prompt similarity (if enabled)
-  try {
-    const enableSimilarityCheck = await featureFlagService.isEnabled(
-      'enable_prompt_similarity_check',
-      context.userId,
-      (context as any).workspaceId
-    );
-
-    if (enableSimilarityCheck) {
-      // Get known prompts from configuration or database
-      const knownPrompts = (nodeConfig.knownPrompts as string[]) || [];
-      const similarityThreshold = (nodeConfig.similarityThreshold as number) || 0.85;
-
-      if (knownPrompts.length > 0) {
-        // Get traceId after span creation
-        const spanContext = span.spanContext();
-        const traceId = spanContext.traceId;
-
-        const similarityResult = await guardrailsService.checkPromptSimilarity(
-          prompt,
-          knownPrompts,
-          context.userId || undefined,
-          (context as any).organizationId || undefined,
-          (context as any).workspaceId || undefined,
-          similarityThreshold,
-          'cosine',
-          context.executionId || undefined,
-          context.nodeId || undefined,
-          traceId
-        );
-
-        if (similarityResult.similar) {
-          return {
-            success: false,
-            error: {
-              message: `Prompt similarity check failed: prompt is too similar to known prompts (${(similarityResult.similarityScore * 100).toFixed(1)}% similarity)`,
-              code: 'PROMPT_SIMILARITY_ERROR',
-              details: {
-                similarityScore: similarityResult.similarityScore,
-                matchedPrompts: similarityResult.matchedPrompts,
-              },
-            },
-          };
-        }
-      }
-    }
-  } catch (error: any) {
-    console.warn('[LLM Executor] Prompt similarity check failed:', error);
-    // Continue execution if similarity check fails
-  }
-
   const startTime = Date.now();
   const modelName = nodeConfig.model || 'gpt-3.5-turbo';
   const provider = (nodeConfig.provider as 'openai' | 'anthropic' | 'google') || 'openai';
@@ -94,6 +43,60 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
   try {
     const spanContext = span.spanContext();
     traceId = spanContext.traceId;
+
+    // Guardrails: Check prompt similarity (if enabled)
+    try {
+      const enableSimilarityCheck = await featureFlagService.isEnabled(
+        'enable_prompt_similarity_check',
+        context.userId,
+        (context as any).workspaceId
+      );
+
+      if (enableSimilarityCheck) {
+        // Get known prompts from configuration or database
+        const knownPrompts = (nodeConfig.knownPrompts as string[]) || [];
+        const similarityThreshold = (nodeConfig.similarityThreshold as number) || 0.85;
+
+        if (knownPrompts.length > 0) {
+          const similarityResult = await guardrailsService.checkPromptSimilarity(
+            prompt,
+            knownPrompts,
+            context.userId || undefined,
+            (context as any).organizationId || undefined,
+            (context as any).workspaceId || undefined,
+            similarityThreshold,
+            'cosine',
+            context.executionId || undefined,
+            context.nodeId || undefined,
+            traceId
+          );
+
+          if (similarityResult.similar) {
+            span.setAttributes({
+              'guardrails.similarity_check': 'blocked',
+              'guardrails.similarity_score': similarityResult.similarityScore,
+            });
+            span.setStatus({ code: SpanStatusCode.ERROR, message: 'Prompt similarity check failed' });
+            span.end();
+
+            return {
+              success: false,
+              error: {
+                message: `Prompt similarity check failed: prompt is too similar to known prompts (${(similarityResult.similarityScore * 100).toFixed(1)}% similarity)`,
+                code: 'PROMPT_SIMILARITY_ERROR',
+                details: {
+                  similarityScore: similarityResult.similarityScore,
+                  matchedPrompts: similarityResult.matchedPrompts,
+                },
+              },
+            };
+          }
+        }
+      }
+    } catch (error: any) {
+      console.warn('[LLM Executor] Prompt similarity check failed:', error);
+      // Continue execution if similarity check fails
+    }
 
     const result = await aiService.generateText({
       prompt,
