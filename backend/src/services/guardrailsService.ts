@@ -53,6 +53,14 @@ export interface PromptLengthResult {
   action?: 'allow' | 'warn' | 'block';
 }
 
+export interface RegionRoutingResult {
+  region: string; // Target region (e.g., 'us-east', 'eu-west', 'asia-pacific')
+  endpoint?: string; // Recommended API endpoint for the region
+  reason: string; // Reason for routing decision
+  requiresCompliance?: boolean; // Whether compliance requirements triggered routing
+  dataResidency?: string; // Data residency requirement (e.g., 'EU', 'US', 'global')
+}
+
 /**
  * Guardrails Service
  */
@@ -476,6 +484,160 @@ export class GuardrailsService {
       errors: errors.length > 0 ? errors : undefined,
       recommendedModel,
       action,
+    };
+  }
+
+  /**
+   * Determine region-based routing for LLM requests
+   * 
+   * Routes requests based on:
+   * - User/organization region preference
+   * - Data residency requirements (GDPR, HIPAA, etc.)
+   * - Compliance requirements
+   * - Latency optimization
+   * 
+   * @param options - Routing configuration options
+   * @returns Region routing recommendation
+   */
+  determineRegionRouting(options: {
+    userId?: string;
+    organizationId?: string;
+    workspaceId?: string;
+    userRegion?: string; // User's geographic region
+    dataResidency?: string; // Required data residency (e.g., 'EU', 'US', 'global')
+    complianceRequirements?: string[]; // Compliance requirements (e.g., 'GDPR', 'HIPAA', 'SOC2')
+    preferredRegion?: string; // User's preferred region
+    provider?: 'openai' | 'anthropic' | 'google';
+  } = {}): RegionRoutingResult {
+    const {
+      userRegion,
+      dataResidency,
+      complianceRequirements = [],
+      preferredRegion,
+      provider = 'openai',
+    } = options;
+
+    // Default region mapping for providers
+    const providerRegions: Record<string, Record<string, string>> = {
+      openai: {
+        'us': 'us-east',
+        'eu': 'eu-west',
+        'asia': 'asia-pacific',
+        'global': 'us-east', // Default
+      },
+      anthropic: {
+        'us': 'us-east',
+        'eu': 'eu-west',
+        'asia': 'asia-pacific',
+        'global': 'us-east',
+      },
+      google: {
+        'us': 'us-central',
+        'eu': 'europe-west',
+        'asia': 'asia-east',
+        'global': 'us-central',
+      },
+    };
+
+    // Determine target region based on priority:
+    // 1. Data residency requirements (highest priority)
+    // 2. Compliance requirements
+    // 3. User preference
+    // 4. User's geographic region
+    // 5. Default (global/US)
+
+    let targetRegion = 'us-east'; // Default
+    let reason = 'Default routing';
+    let requiresCompliance = false;
+
+    // Check data residency requirements
+    if (dataResidency) {
+      requiresCompliance = true;
+      if (dataResidency.toUpperCase() === 'EU' || dataResidency.toUpperCase() === 'EUROPE') {
+        targetRegion = providerRegions[provider]?.['eu'] || 'eu-west';
+        reason = `Data residency requirement: EU data must be processed in EU region`;
+      } else if (dataResidency.toUpperCase() === 'US' || dataResidency.toUpperCase() === 'USA') {
+        targetRegion = providerRegions[provider]?.['us'] || 'us-east';
+        reason = `Data residency requirement: US data must be processed in US region`;
+      } else if (dataResidency.toUpperCase() === 'ASIA' || dataResidency.toUpperCase() === 'ASIA-PACIFIC') {
+        targetRegion = providerRegions[provider]?.['asia'] || 'asia-pacific';
+        reason = `Data residency requirement: Asia data must be processed in Asia region`;
+      }
+    }
+
+    // Check compliance requirements
+    if (complianceRequirements.length > 0) {
+      requiresCompliance = true;
+      const hasGDPR = complianceRequirements.some(r => r.toUpperCase().includes('GDPR'));
+      const hasHIPAA = complianceRequirements.some(r => r.toUpperCase().includes('HIPAA'));
+      const hasSOC2 = complianceRequirements.some(r => r.toUpperCase().includes('SOC2'));
+
+      if (hasGDPR && !dataResidency) {
+        // GDPR requires EU data processing
+        targetRegion = providerRegions[provider]?.['eu'] || 'eu-west';
+        reason = `GDPR compliance: routing to EU region for data protection`;
+      } else if (hasHIPAA && !dataResidency) {
+        // HIPAA typically requires US-based processing
+        targetRegion = providerRegions[provider]?.['us'] || 'us-east';
+        reason = `HIPAA compliance: routing to US region for healthcare data`;
+      } else if (hasSOC2 && !dataResidency) {
+        // SOC2 can work with any region, but prefer US for consistency
+        if (targetRegion === 'us-east') {
+          reason = `SOC2 compliance: routing to US region`;
+        }
+      }
+    }
+
+    // Use preferred region if no compliance requirements
+    if (!requiresCompliance && preferredRegion) {
+      targetRegion = preferredRegion;
+      reason = `User preferred region: ${preferredRegion}`;
+    }
+
+    // Use user's geographic region if no other preference
+    if (!requiresCompliance && !preferredRegion && userRegion) {
+      // Map user region to provider region
+      const regionMap: Record<string, string> = {
+        'us': providerRegions[provider]?.['us'] || 'us-east',
+        'eu': providerRegions[provider]?.['eu'] || 'eu-west',
+        'europe': providerRegions[provider]?.['eu'] || 'eu-west',
+        'uk': providerRegions[provider]?.['eu'] || 'eu-west',
+        'asia': providerRegions[provider]?.['asia'] || 'asia-pacific',
+        'apac': providerRegions[provider]?.['asia'] || 'asia-pacific',
+        'asia-pacific': providerRegions[provider]?.['asia'] || 'asia-pacific',
+      };
+
+      const mappedRegion = regionMap[userRegion.toLowerCase()];
+      if (mappedRegion) {
+        targetRegion = mappedRegion;
+        reason = `User geographic region: ${userRegion} → ${targetRegion}`;
+      }
+    }
+
+    // Build endpoint URL based on region and provider
+    let endpoint: string | undefined;
+    if (provider === 'openai') {
+      // OpenAI doesn't expose regional endpoints directly, but we can note the region
+      endpoint = `https://api.openai.com/v1`; // OpenAI uses global endpoint with regional routing
+    } else if (provider === 'anthropic') {
+      endpoint = `https://api.anthropic.com/v1`; // Anthropic uses global endpoint
+    } else if (provider === 'google') {
+      // Google Cloud has regional endpoints
+      const googleRegions: Record<string, string> = {
+        'us-central': 'us-central1',
+        'europe-west': 'europe-west1',
+        'asia-east': 'asia-east1',
+      };
+      const googleRegion = googleRegions[targetRegion] || 'us-central1';
+      endpoint = `https://${googleRegion}-aiplatform.googleapis.com/v1`;
+    }
+
+    return {
+      region: targetRegion,
+      endpoint,
+      reason,
+      requiresCompliance,
+      dataResidency: dataResidency || (requiresCompliance ? 'region-specific' : undefined),
     };
   }
 

@@ -115,6 +115,48 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
       // Continue execution if length check fails
     }
 
+    // Guardrails: Determine region-based routing (if enabled)
+    try {
+      const enableRegionRouting = await featureFlagService.isEnabled(
+        'enable_region_routing',
+        context.userId,
+        (context as any).workspaceId
+      );
+
+      if (enableRegionRouting) {
+        const regionRouting = guardrailsService.determineRegionRouting({
+          userId: context.userId || undefined,
+          organizationId: (context as any).organizationId || undefined,
+          workspaceId: (context as any).workspaceId || undefined,
+          userRegion: nodeConfig.userRegion || (context as any).userRegion,
+          dataResidency: nodeConfig.dataResidency || (context as any).dataResidency,
+          complianceRequirements: nodeConfig.complianceRequirements || (context as any).complianceRequirements,
+          preferredRegion: nodeConfig.preferredRegion || (context as any).preferredRegion,
+          provider,
+        });
+
+        span.setAttributes({
+          'guardrails.routing_region': regionRouting.region,
+          'guardrails.routing_reason': regionRouting.reason,
+          'guardrails.requires_compliance': regionRouting.requiresCompliance || false,
+          'guardrails.data_residency': regionRouting.dataResidency || 'none',
+        });
+
+        // Log routing decision (could be used to route actual API calls)
+        if (regionRouting.endpoint) {
+          span.setAttributes({
+            'guardrails.routing_endpoint': regionRouting.endpoint,
+          });
+        }
+
+        // Note: In a full implementation, we would use the endpoint for API calls
+        // For now, we just log the routing decision
+      }
+    } catch (error: any) {
+      console.warn('[LLM Executor] Region routing check failed:', error);
+      // Continue execution if region routing fails
+    }
+
     // Guardrails: Check prompt similarity (if enabled)
     try {
       const enableSimilarityCheck = await featureFlagService.isEnabled(
