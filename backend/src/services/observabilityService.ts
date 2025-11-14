@@ -192,8 +192,26 @@ export class ObservabilityService {
           metadata: {
             duration,
             latencyMs: duration,
+            // Add OpenTelemetry trace ID for linking
+            otelTraceId: finalTraceId,
           },
           intermediateSteps: extractedIntermediateSteps.length > 0 ? extractedIntermediateSteps : undefined,
+        }).then((langfuseUrl) => {
+          // Store Langfuse trace URL in event context for linking
+          if (langfuseUrl) {
+            // Add Langfuse URL to OpenTelemetry span attributes if available
+            try {
+              const activeSpan = trace.getActiveSpan();
+              if (activeSpan) {
+                activeSpan.setAttributes({
+                  'langfuse.traceUrl': langfuseUrl,
+                  'langfuse.traceId': finalTraceId,
+                });
+              }
+            } catch (err) {
+              // Ignore errors setting span attributes
+            }
+          }
         }).catch((err: any) => {
           // Log but don't throw - Langfuse export should not break execution
           console.warn('[Observability] Langfuse export failed:', err);

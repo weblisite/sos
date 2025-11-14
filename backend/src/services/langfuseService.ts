@@ -212,10 +212,11 @@ export class LangfuseService {
 
   /**
    * Export span to Langfuse
+   * Returns Langfuse trace URL for linking
    */
-  async exportSpan(options: SpanExportOptions): Promise<void> {
+  async exportSpan(options: SpanExportOptions): Promise<string | null> {
     if (!this.enabled || !this.client) {
-      return;
+      return null;
     }
 
     try {
@@ -230,6 +231,9 @@ export class LangfuseService {
           ...options.attributes,
           cost: options.cost,
           tokens: options.tokens,
+          // Add OpenTelemetry trace/span IDs for linking
+          'otel.traceId': options.traceId,
+          'otel.spanId': options.spanId,
         },
         level: options.status?.code === SpanStatusCode.ERROR ? 'ERROR' : 'DEFAULT',
         statusMessage: options.status?.message,
@@ -250,6 +254,9 @@ export class LangfuseService {
       generation.end({
         endTime: options.endTime,
       });
+
+      // Return Langfuse trace URL
+      return this.getTraceUrl(options.traceId);
     } catch (error: any) {
       console.error('[Langfuse] Span export failed:', error);
       throw error;
@@ -257,7 +264,21 @@ export class LangfuseService {
   }
 
   /**
+   * Get Langfuse trace URL
+   */
+  getTraceUrl(traceId: string): string | null {
+    if (!this.enabled || !this.client) {
+      return null;
+    }
+
+    const host = process.env.LANGFUSE_HOST || 'https://cloud.langfuse.com';
+    // Langfuse trace URLs follow pattern: {host}/traces/{traceId}
+    return `${host}/traces/${traceId}`;
+  }
+
+  /**
    * Export agent execution trace
+   * Returns Langfuse trace URL for linking
    */
   async exportAgentExecution(options: {
     traceId: string;
@@ -411,6 +432,9 @@ export class LangfuseService {
     trace.end({
       endTime: options.endTime,
     });
+
+    // Return Langfuse trace URL for linking
+    return this.getTraceUrl(options.traceId);
   }
 
   /**
