@@ -12,6 +12,7 @@
 
 import { guardrailsService, PromptLengthResult, RegionRoutingResult, CostTieringResult, ValidationResult } from './guardrailsService';
 import { guardrailsAIService, GuardrailsAIOptions } from './guardrailsAIService';
+import { policyEngineService, PolicyContext, PolicyEvaluationResult } from './policyEngineService';
 import { featureFlagService } from './featureFlagService';
 import { db } from '../config/database';
 import { organizations } from '../../drizzle/schema';
@@ -60,6 +61,9 @@ export interface RoutingDecision {
   // GuardrailsAI validation results
   inputValidation?: ValidationResult;
   outputValidation?: ValidationResult;
+  
+  // Policy evaluation results
+  policyEvaluation?: PolicyEvaluationResult;
 }
 
 /**
@@ -360,7 +364,73 @@ export class ArchGWService {
       warnings.push(...validationResult.warnings);
     }
 
-    // Step 8: GuardrailsAI input validation (if enabled)
+    // Step 8: Evaluate routing policies (if enabled)
+    let policyEvaluation: PolicyEvaluationResult | undefined;
+    try {
+      const enablePolicyEngine = await featureFlagService.isEnabled(
+        'enable_policy_engine',
+        userId,
+        workspaceId
+      );
+
+      if (enablePolicyEngine) {
+        const policyContext: PolicyContext = {
+          userId,
+          organizationId,
+          workspaceId,
+          userPlan: orgPlan,
+          prompt,
+          promptLength: prompt.length,
+          requestedModel,
+          requestedProvider,
+          estimatedCost,
+          region: finalRegion,
+          complianceRequirements: orgComplianceRequirements.length > 0 
+            ? orgComplianceRequirements 
+            : complianceRequirements,
+          dataResidency: orgDataResidency || dataResidency,
+        };
+
+        policyEvaluation = await policyEngineService.evaluatePolicies(policyContext, {
+          organizationId,
+          workspaceId,
+        });
+
+        // Apply policy actions
+        if (policyEvaluation.blocked) {
+          errors.push(policyEvaluation.reason || 'Request blocked by policy');
+        }
+
+        if (policyEvaluation.warnings && policyEvaluation.warnings.length > 0) {
+          warnings.push(...policyEvaluation.warnings);
+        }
+
+        // Apply routing modifications from policies
+        if (policyEvaluation.modifiedContext) {
+          if (policyEvaluation.modifiedContext.requestedModel) {
+            finalModel = policyEvaluation.modifiedContext.requestedModel;
+            factors.push('policy_routing');
+          }
+          if (policyEvaluation.modifiedContext.requestedProvider) {
+            finalProvider = policyEvaluation.modifiedContext.requestedProvider as LLMProvider;
+            factors.push('policy_routing');
+          }
+          if (policyEvaluation.modifiedContext.region) {
+            finalRegion = policyEvaluation.modifiedContext.region;
+            factors.push('policy_routing');
+          }
+        }
+
+        if (policyEvaluation.matched) {
+          factors.push('policy_evaluation');
+        }
+      }
+    } catch (error: any) {
+      console.warn('[ArchGW] Policy evaluation failed:', error);
+      warnings.push('Policy evaluation failed');
+    }
+
+    // Step 9: GuardrailsAI input validation (if enabled)
     let inputValidation: ValidationResult | undefined;
     if (options.validateInput) {
       try {
@@ -417,7 +487,7 @@ export class ArchGWService {
       }
     }
 
-    // Step 9: Build final routing decision
+    // Step 10: Build final routing decision
     const decision: RoutingDecision = {
       provider: finalProvider,
       model: finalModel,
@@ -439,7 +509,13 @@ export class ArchGWService {
       warnings: warnings.length > 0 ? warnings : undefined,
       errors: errors.length > 0 ? errors : undefined,
       inputValidation,
+      policyEvaluation,
     };
+
+    // If blocked by policy, return early
+    if (policyEvaluation?.blocked) {
+      return decision;
+    }
 
     return decision;
   }
