@@ -529,6 +529,95 @@ export async function executeLLM(context: NodeExecutionContext): Promise<NodeExe
 
     const latencyMs = Date.now() - startTime;
 
+    // Guardrails: Validate output with JSON Schema (if enabled and schema provided)
+    let validatedOutput: any = result.content;
+    try {
+      const enableJSONSchemaValidation = await featureFlagService.isEnabled(
+        'enable_json_schema_validation',
+        context.userId,
+        (context as any).workspaceId
+      );
+
+      if (enableJSONSchemaValidation && (nodeConfig.jsonSchema || nodeConfig.outputSchema)) {
+        const jsonSchema = nodeConfig.jsonSchema || nodeConfig.outputSchema;
+        
+        // Try to parse output as JSON if it's a string
+        let outputToValidate: any = result.content;
+        if (typeof result.content === 'string') {
+          try {
+            outputToValidate = JSON.parse(result.content);
+          } catch {
+            // If parsing fails, validate as string
+            outputToValidate = result.content;
+          }
+        }
+
+        const validationResult = await guardrailsService.validateOutputWithJSONSchema(
+          outputToValidate,
+          jsonSchema,
+          {
+            coerceTypes: nodeConfig.coerceTypes !== false,
+            removeAdditional: nodeConfig.removeAdditional === true,
+            useDefaults: nodeConfig.useDefaults !== false,
+            policies: nodeConfig.validationPolicies,
+            useAPI: nodeConfig.useGuardrailsAIAPI === true,
+            apiUrl: nodeConfig.guardrailsAIAPIUrl,
+            apiKey: nodeConfig.guardrailsAIAPIKey,
+          }
+        );
+
+        span.setAttributes({
+          'guardrails.json_schema_validation': validationResult.valid ? 'passed' : 'failed',
+        });
+
+        if (validationResult.warnings && validationResult.warnings.length > 0) {
+          span.setAttributes({
+            'guardrails.json_schema_warnings': validationResult.warnings.join('; '),
+          });
+        }
+
+        if (!validationResult.valid) {
+          span.setAttributes({
+            'guardrails.json_schema_errors': validationResult.errors?.join('; ') || '',
+          });
+
+          // If strict validation is enabled, fail the request
+          if (nodeConfig.strictJSONSchemaValidation === true) {
+            span.setStatus({ 
+              code: SpanStatusCode.ERROR, 
+              message: 'JSON Schema validation failed' 
+            });
+            span.end();
+
+            return {
+              success: false,
+              error: {
+                message: `JSON Schema validation failed: ${validationResult.errors?.join(', ')}`,
+                code: 'JSON_SCHEMA_VALIDATION_ERROR',
+                details: {
+                  errors: validationResult.errors,
+                  warnings: validationResult.warnings,
+                  output: result.content,
+                },
+              },
+            };
+          } else {
+            // Log warning but continue
+            console.warn('[LLM Executor] JSON Schema validation failed:', validationResult.errors);
+          }
+        } else if (validationResult.data !== undefined) {
+          // Use validated/coerced data
+          validatedOutput = validationResult.data;
+          span.setAttributes({
+            'guardrails.json_schema_coerced': true,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.warn('[LLM Executor] JSON Schema validation failed:', error);
+      // Continue execution if validation fails
+    }
+
     // Update span with LLM execution details including enhanced cost and similarity data
     span.setAttributes({
       'llm.input_tokens': inputTokens,

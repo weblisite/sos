@@ -3,6 +3,7 @@ import { posthogService } from './posthogService';
 import { featureFlagService } from './featureFlagService';
 import { langchainService } from './langchainService';
 import { similarityService, SimilarityMethod } from './similarityService';
+import { guardrailsAIService, GuardrailsAIOptions, GuardrailsAIValidationResult } from './guardrailsAIService';
 import { db } from '../config/database';
 import { promptSimilarityLogs } from '../../drizzle/schema';
 import { createId } from '@paralleldrive/cuid2';
@@ -137,6 +138,109 @@ export class GuardrailsService {
     schema: z.ZodSchema<T>
   ): ValidationResult {
     return this.validateInput(output, schema);
+  }
+
+  /**
+   * Validate output using JSON Schema (GuardrailsAI)
+   * 
+   * This method uses GuardrailsAI service to validate LLM outputs
+   * against JSON Schema, providing structured output validation.
+   */
+  async validateOutputWithJSONSchema(
+    output: unknown,
+    jsonSchema: Record<string, any> | string,
+    options: {
+      coerceTypes?: boolean;
+      removeAdditional?: boolean;
+      useDefaults?: boolean;
+      policies?: GuardrailsAIOptions['policies'];
+      useAPI?: boolean;
+      apiUrl?: string;
+      apiKey?: string;
+    } = {}
+  ): Promise<ValidationResult & { data?: any }> {
+    try {
+      const validationResult = await guardrailsAIService.validate(output, {
+        schema: typeof jsonSchema === 'string' ? undefined : jsonSchema,
+        schemaString: typeof jsonSchema === 'string' ? jsonSchema : undefined,
+        coerceTypes: options.coerceTypes,
+        removeAdditional: options.removeAdditional,
+        useDefaults: options.useDefaults,
+        policies: options.policies,
+        useAPI: options.useAPI,
+        apiUrl: options.apiUrl,
+        apiKey: options.apiKey,
+      });
+
+      if (validationResult.valid) {
+        return {
+          valid: true,
+          data: validationResult.data,
+          warnings: validationResult.warnings,
+        };
+      } else {
+        return {
+          valid: false,
+          errors: validationResult.errors,
+          warnings: validationResult.warnings,
+        };
+      }
+    } catch (error: any) {
+      return {
+        valid: false,
+        errors: [`JSON Schema validation failed: ${error.message}`],
+      };
+    }
+  }
+
+  /**
+   * Validate output using both Zod and JSON Schema
+   * 
+   * This method provides dual validation for maximum compatibility.
+   */
+  async validateOutputDual(
+    output: unknown,
+    zodSchema?: z.ZodSchema<any>,
+    jsonSchema?: Record<string, any> | string,
+    options: {
+      coerceTypes?: boolean;
+      removeAdditional?: boolean;
+      useDefaults?: boolean;
+      policies?: GuardrailsAIOptions['policies'];
+    } = {}
+  ): Promise<ValidationResult & { data?: any }> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    let validatedData: any = output;
+
+    // Validate with Zod if provided
+    if (zodSchema) {
+      const zodResult = this.validateOutput(output, zodSchema);
+      if (!zodResult.valid) {
+        errors.push(...(zodResult.errors || []));
+      }
+    }
+
+    // Validate with JSON Schema if provided
+    if (jsonSchema) {
+      const jsonResult = await this.validateOutputWithJSONSchema(output, jsonSchema, options);
+      if (!jsonResult.valid) {
+        errors.push(...(jsonResult.errors || []));
+      } else if (jsonResult.data !== undefined) {
+        // Use validated/coerced data from JSON Schema
+        validatedData = jsonResult.data;
+      }
+      if (jsonResult.warnings) {
+        warnings.push(...jsonResult.warnings);
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined,
+      warnings: warnings.length > 0 ? warnings : undefined,
+      data: validatedData,
+    };
   }
 
   /**
