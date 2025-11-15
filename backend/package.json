@@ -18,6 +18,7 @@
     "test:typescript": "tsx scripts/test-typescript-execution.ts",
     "test:bash": "tsx scripts/test-bash-execution.ts",
     "test:e2b": "tsx scripts/test-e2b-execution.ts",
+    "test:wasmedge": "tsx scripts/test-wasmedge-execution.ts",
     "test:etl-hooks": "tsx scripts/test-etl-hooks.ts",
     "test:agent-code": "tsx scripts/test-agent-code-execution.ts"
   },

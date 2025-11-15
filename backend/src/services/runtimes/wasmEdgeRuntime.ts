@@ -20,33 +20,18 @@ export interface WasmEdgeConfig {
 }
 
 export class WasmEdgeRuntime {
-  private serviceUrl: string;
+  private wasmEdgePath: string;
   private timeout: number;
   private memoryLimit: number;
-  private httpService: WasmEdgeHttpService | null = null;
   private isAvailable: boolean = false;
 
   constructor(config?: WasmEdgeConfig) {
-    this.serviceUrl = config?.serviceUrl || process.env.WASMEDGE_SERVICE_URL || '';
     this.timeout = config?.timeout || 30000;
     this.memoryLimit = config?.memoryLimit || 128 * 1024 * 1024; // 128MB default
+    this.wasmEdgePath = config?.wasmEdgePath || process.env.WASMEDGE_PATH || 'wasmedge';
     
-    // Initialize HTTP service if URL is provided
-    if (this.serviceUrl) {
-      this.httpService = new WasmEdgeHttpService({
-        serviceUrl: this.serviceUrl,
-        timeout: this.timeout,
-        apiKey: config?.apiKey || process.env.WASMEDGE_API_KEY,
-      });
-      this.isAvailable = true;
-    } else if (process.env.WASMEDGE_ENABLED === 'true') {
-      // If enabled but no URL, assume embedded SDK will be used later
-      this.isAvailable = true;
-    }
-    
-    if (!this.isAvailable) {
-      console.warn('WasmEdge runtime is not available. Set WASMEDGE_SERVICE_URL or WASMEDGE_ENABLED=true.');
-    }
+    // Check if WasmEdge is available (will be checked asynchronously)
+    this.isAvailable = process.env.WASMEDGE_ENABLED !== 'false';
   }
 
   /**
@@ -56,15 +41,6 @@ export class WasmEdgeRuntime {
     return this.isAvailable;
   }
 
-  /**
-   * Health check
-   */
-  async healthCheck(): Promise<boolean> {
-    if (!this.httpService) {
-      return false;
-    }
-    return await this.httpService.healthCheck();
-  }
 
   /**
    * Execute WASM code
@@ -168,14 +144,23 @@ export class WasmEdgeRuntime {
         await writeFile(inputFile, JSON.stringify(input));
 
         // Execute WASM using wasmedge CLI
-        // Note: This assumes the WASM module has a main function that reads from stdin
+        // Pass input via environment variable or stdin
         const executeTimeout = Math.min(timeout, this.timeout);
+        const inputJson = JSON.stringify(input);
+        
+        // Use wasmedge with input passed via environment variable
+        // The WASM module should read from WASM_INPUT environment variable
         const command = `${this.wasmEdgePath} ${wasmFile}`;
+        const env = {
+          ...process.env,
+          WASM_INPUT: inputJson,
+        };
         
         const result = await Promise.race([
           execAsync(command, {
             timeout: executeTimeout,
             maxBuffer: this.memoryLimit,
+            env,
           }),
           new Promise<{ stdout: string; stderr: string }>((_, reject) =>
             setTimeout(() => reject(new Error(`WasmEdge execution timed out after ${executeTimeout}ms`)), executeTimeout)
@@ -239,8 +224,9 @@ export class WasmEdgeRuntime {
       } finally {
         // Cleanup temp files
         try {
-          await unlink(wasmFile).catch(() => {});
-          await unlink(inputFile).catch(() => {});
+          const { rm } = await import('fs/promises');
+          await rm(wasmFile, { force: true }).catch(() => {});
+          await rm(inputFile, { force: true }).catch(() => {});
         } catch {
           // Ignore cleanup errors
         }

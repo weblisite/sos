@@ -139,28 +139,50 @@ export class WasmCompiler {
       try {
         // Write code to file
         const inputFile = join(tempDir, 'index.ts');
-        await writeFile(inputFile, code, 'utf-8');
+        
+        // Wrap code in AssemblyScript-compatible format if needed
+        // AssemblyScript uses a subset of TypeScript
+        let assemblyCode = code;
+        
+        // If code doesn't have exports, wrap it
+        if (!code.includes('export')) {
+          assemblyCode = `
+            export function main(): i32 {
+              ${code}
+              return 0;
+            }
+          `;
+        }
+        
+        await writeFile(inputFile, assemblyCode, 'utf-8');
 
         // Compile to WASM
         const outputFile = join(tempDir, 'index.wasm');
-        await execAsync(`asc ${inputFile} --target release --outFile ${outputFile}`, {
+        const { stderr } = await execAsync(`asc ${inputFile} --target release --outFile ${outputFile} --optimize`, {
           cwd: tempDir,
         });
 
+        // Check if compilation succeeded
+        if (!existsSync(outputFile)) {
+          throw new Error(`Compilation failed: ${stderr || 'No output file generated'}`);
+        }
+
         // Read WASM binary
         const wasmBinary = await readFile(outputFile);
-
-        // Cleanup
-        await unlink(inputFile).catch(() => {});
-        await unlink(outputFile).catch(() => {});
 
         return wasmBinary;
       } finally {
         // Cleanup temp directory
         try {
-          await execAsync(`rm -rf ${tempDir}`);
+          const { rm } = await import('fs/promises');
+          await rm(tempDir, { recursive: true, force: true }).catch(() => {});
         } catch {
-          // Ignore cleanup errors
+          // Fallback cleanup
+          try {
+            await execAsync(`rm -rf ${tempDir}`);
+          } catch {
+            // Ignore cleanup errors
+          }
         }
       }
     } catch (error: any) {
@@ -234,15 +256,24 @@ export class WasmCompiler {
 
         // Read WASM binary
         const wasmFile = join(tempDir, 'pkg', 'wasm_code_bg.wasm');
+        if (!existsSync(wasmFile)) {
+          throw new Error('WASM file not generated');
+        }
         const wasmBinary = await readFile(wasmFile);
 
         return wasmBinary;
       } finally {
         // Cleanup
         try {
-          await execAsync(`rm -rf ${tempDir}`);
+          const { rm } = await import('fs/promises');
+          await rm(tempDir, { recursive: true, force: true }).catch(() => {});
         } catch {
-          // Ignore cleanup errors
+          // Fallback cleanup
+          try {
+            await execAsync(`rm -rf ${tempDir}`);
+          } catch {
+            // Ignore cleanup errors
+          }
         }
       }
     } catch (error: any) {
@@ -277,20 +308,27 @@ export class WasmCompiler {
           cwd: tempDir,
         });
 
+        // Check if WASM file was created
+        if (!existsSync(outputFile)) {
+          throw new Error('WASM file not generated');
+        }
+
         // Read WASM binary
         const wasmBinary = await readFile(outputFile);
-
-        // Cleanup
-        await unlink(inputFile).catch(() => {});
-        await unlink(outputFile).catch(() => {});
 
         return wasmBinary;
       } finally {
         // Cleanup temp directory
         try {
-          await execAsync(`rm -rf ${tempDir}`);
+          const { rm } = await import('fs/promises');
+          await rm(tempDir, { recursive: true, force: true }).catch(() => {});
         } catch {
-          // Ignore cleanup errors
+          // Fallback cleanup
+          try {
+            await execAsync(`rm -rf ${tempDir}`);
+          } catch {
+            // Ignore cleanup errors
+          }
         }
       }
     } catch (error: any) {
