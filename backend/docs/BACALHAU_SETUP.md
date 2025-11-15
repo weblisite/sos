@@ -41,9 +41,9 @@ bacalhau node list
 
 You should see a list of nodes indicating a successful setup.
 
-### 3. Install NPM Package
+### 3. Backend Dependencies
 
-The Bacalhau JavaScript SDK is already included in `package.json`:
+The backend uses the Bacalhau CLI directly (no additional npm packages required). Ensure your backend dependencies are installed:
 
 ```bash
 npm install
