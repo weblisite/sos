@@ -114,52 +114,7 @@ router.get('/', authenticate, setOrganization, async (req: AuthRequest, res) => 
   }
 });
 
-// Get a specific audit log by ID
-router.get('/:id', authenticate, setOrganization, async (req: AuthRequest, res) => {
-  try {
-    if (!req.user || !req.organizationId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const [log] = await db
-      .select({
-        id: auditLogs.id,
-        userId: auditLogs.userId,
-        userEmail: users.email,
-        userName: users.name,
-        organizationId: auditLogs.organizationId,
-        action: auditLogs.action,
-        resourceType: auditLogs.resourceType,
-        resourceId: auditLogs.resourceId,
-        details: auditLogs.details,
-        ipAddress: auditLogs.ipAddress,
-        userAgent: auditLogs.userAgent,
-        createdAt: auditLogs.createdAt,
-      })
-      .from(auditLogs)
-      .leftJoin(users, eq(auditLogs.userId, users.id))
-      .where(
-        and(
-          eq(auditLogs.id, req.params.id),
-          eq(auditLogs.organizationId, req.organizationId)
-        )
-      )
-      .limit(1);
-
-    if (!log) {
-      res.status(404).json({ error: 'Audit log not found' });
-      return;
-    }
-
-    res.json(log);
-  } catch (error: any) {
-    console.error('Error fetching audit log:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
-  }
-});
-
-// Export audit logs as CSV
+// Export audit logs as CSV (must come before /:id route)
 router.get('/export/csv', authenticate, setOrganization, async (req: AuthRequest, res) => {
   try {
     if (!req.user || !req.organizationId) {
@@ -270,6 +225,51 @@ router.get('/export/csv', authenticate, setOrganization, async (req: AuthRequest
     res.send(csvContent);
   } catch (error: any) {
     console.error('Error exporting audit logs:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// Get a specific audit log by ID
+router.get('/:id', authenticate, setOrganization, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user || !req.organizationId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const [log] = await db
+      .select({
+        id: auditLogs.id,
+        userId: auditLogs.userId,
+        userEmail: users.email,
+        userName: users.name,
+        organizationId: auditLogs.organizationId,
+        action: auditLogs.action,
+        resourceType: auditLogs.resourceType,
+        resourceId: auditLogs.resourceId,
+        details: auditLogs.details,
+        ipAddress: auditLogs.ipAddress,
+        userAgent: auditLogs.userAgent,
+        createdAt: auditLogs.createdAt,
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id))
+      .where(
+        and(
+          eq(auditLogs.id, req.params.id),
+          eq(auditLogs.organizationId, req.organizationId)
+        )
+      )
+      .limit(1);
+
+    if (!log) {
+      res.status(404).json({ error: 'Audit log not found' });
+      return;
+    }
+
+    res.json(log);
+  } catch (error: any) {
+    console.error('Error fetching audit log:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
