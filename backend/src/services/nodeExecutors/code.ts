@@ -270,6 +270,7 @@ export async function executeCode(
     const memoryMb = (result as any).metadata?.memoryMb || (result as any).memoryMb;
     const tokensUsed = (result as any).metadata?.tokensUsed || (result as any).tokensUsed;
     const exitCode = (result as any).metadata?.exitCode || (result as any).exitCode;
+    const aiGenerated = (result as any).metadata?.aiGenerated || false;
 
     span.setAttributes({
       'code.success': result.success,
@@ -281,6 +282,7 @@ export async function executeCode(
       ...(memoryMb !== undefined && { 'code.memory_mb': memoryMb }),
       ...(tokensUsed !== undefined && { 'code.tokens_used': tokensUsed }),
       ...(exitCode !== undefined && { 'code.exit_code': exitCode }),
+      'code.ai_generated': aiGenerated,
     });
     span.setStatus({ code: result.success ? SpanStatusCode.OK : SpanStatusCode.ERROR });
 
@@ -302,6 +304,7 @@ export async function executeCode(
       success: result.success,
       errorMessage: result.error?.message || errorMessage,
       tokensUsed: tokensUsed,
+      aiGenerated: aiGenerated,
       validationPassed,
       organizationId,
       workspaceId,

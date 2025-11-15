@@ -284,7 +284,7 @@ export class LangToolsService {
         packages: z.array(z.string()).optional().describe('Python packages to install (for Python only)'),
         input: z.any().optional().describe('Input data for the code (accessible as "input" variable)'),
       }),
-      handler: async ({ language, code, packages, input }) => {
+      handler: async ({ language, code, packages, input }, toolContext?: { tokensUsed?: number; agentId?: string }) => {
         // Import code execution service
         const { executeCode } = await import('./nodeExecutors/code');
         
@@ -296,6 +296,7 @@ export class LangToolsService {
             packages: packages || [],
             timeout: 30000,
             runtime: 'vm2', // Default runtime, could be enhanced with routing
+            codeAgentId: toolContext?.agentId, // Track which agent called this
           },
           workflowId: 'agent-execution',
           nodeId: 'code-tool',
@@ -303,6 +304,16 @@ export class LangToolsService {
 
         // Execute code
         const result = await executeCode(context, language);
+
+        // If tokens were used to generate this code (from agent context), track them
+        if (toolContext?.tokensUsed && result.success) {
+          // Add token usage to result metadata for tracking
+          (result as any).metadata = {
+            ...(result as any).metadata,
+            tokensUsed: toolContext.tokensUsed,
+            aiGenerated: true,
+          };
+        }
 
         if (!result.success) {
           return `Error executing code: ${result.error?.message || 'Unknown error'}`;

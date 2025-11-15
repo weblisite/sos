@@ -20,6 +20,7 @@ export interface CodeExecutionLogData {
   success: boolean;
   errorMessage?: string;
   tokensUsed?: number;
+  aiGenerated?: boolean;
   validationPassed?: boolean;
   organizationId?: string;
   workspaceId?: string;
