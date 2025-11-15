@@ -1213,6 +1213,165 @@ export class ConnectorRegistry {
 
     // Database Connectors
     this.registerDatabaseConnectors();
+
+    // Email Services
+    this.registerEmailConnectors();
+  }
+
+  /**
+   * Register email service connectors
+   */
+  private registerEmailConnectors(): void {
+    // Gmail (Communication)
+    this.register({
+      id: 'gmail',
+      name: 'Gmail',
+      version: '1.0.0',
+      description: 'Send and receive emails via Gmail',
+      category: 'communication',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.readonly'],
+      },
+      actions: [
+        {
+          id: 'send_email',
+          name: 'Send Email',
+          description: 'Send an email via Gmail',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              to: { type: 'string', description: 'Recipient email address' },
+              from: { type: 'string', description: 'Sender email address' },
+              subject: { type: 'string', description: 'Email subject' },
+              body: { type: 'string', description: 'Email body' },
+              isHtml: { type: 'boolean', description: 'Whether body is HTML' },
+            },
+            required: ['to', 'from', 'subject', 'body'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              threadId: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'get_messages',
+          name: 'Get Messages',
+          description: 'Get messages from Gmail inbox',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', description: 'Gmail search query' },
+              maxResults: { type: 'number', description: 'Maximum number of results' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              messages: { type: 'array' },
+            },
+          },
+        },
+        {
+          id: 'get_message',
+          name: 'Get Message',
+          description: 'Get a specific message by ID',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              messageId: { type: 'string' },
+            },
+            required: ['messageId'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              snippet: { type: 'string' },
+            },
+          },
+        },
+      ],
+    });
+
+    // Outlook / Microsoft 365 Mail (Communication)
+    this.register({
+      id: 'outlook',
+      name: 'Outlook',
+      version: '1.0.0',
+      description: 'Send and receive emails via Outlook/Microsoft 365',
+      category: 'communication',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['https://graph.microsoft.com/Mail.Send', 'https://graph.microsoft.com/Mail.Read'],
+      },
+      actions: [
+        {
+          id: 'send_email',
+          name: 'Send Email',
+          description: 'Send an email via Outlook',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              to: { type: 'string', description: 'Recipient email address' },
+              from: { type: 'string', description: 'Sender email address' },
+              subject: { type: 'string', description: 'Email subject' },
+              body: { type: 'string', description: 'Email body' },
+              isHtml: { type: 'boolean', description: 'Whether body is HTML' },
+            },
+            required: ['to', 'from', 'subject', 'body'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+            },
+          },
+        },
+        {
+          id: 'get_messages',
+          name: 'Get Messages',
+          description: 'Get messages from Outlook inbox',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              filter: { type: 'string', description: 'OData filter query' },
+              top: { type: 'number', description: 'Maximum number of results' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              messages: { type: 'array' },
+            },
+          },
+        },
+        {
+          id: 'get_message',
+          name: 'Get Message',
+          description: 'Get a specific message by ID',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              messageId: { type: 'string' },
+            },
+            required: ['messageId'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              subject: { type: 'string' },
+            },
+          },
+        },
+      ],
+    });
   }
 
   /**

@@ -336,6 +336,16 @@ async function executeConnectorAction(
         return executeShopify(actionId, input, credentials as any);
       }
 
+      case 'gmail': {
+        const { executeGmail } = await import('./connectors/gmail');
+        return executeGmail(actionId, input, credentials as any);
+      }
+
+      case 'outlook': {
+        const { executeOutlook } = await import('./connectors/outlook');
+        return executeOutlook(actionId, input, credentials as any);
+      }
+
       case 'slack': {
         // Use existing Slack executor
         const { executeSlack } = await import('./slack');
