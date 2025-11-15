@@ -208,6 +208,11 @@ export default function SandboxStudio() {
       inputSchema: inputSchema || undefined,
       outputSchema: outputSchema || undefined,
       isPublic,
+      metadata: {
+        ...(selectedAgent?.metadata || {}),
+        license: license || undefined,
+        scope: scope || 'private',
+      },
     };
 
     if (selectedAgent) {
