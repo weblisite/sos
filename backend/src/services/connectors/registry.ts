@@ -1216,6 +1216,15 @@ export class ConnectorRegistry {
 
     // Email Services
     this.registerEmailConnectors();
+
+    // Additional Communication Services
+    this.registerAdditionalCommunicationConnectors();
+
+    // Productivity Services
+    this.registerProductivityConnectors();
+
+    // Developer Tools
+    this.registerDeveloperToolsConnectors();
   }
 
   /**
@@ -1367,6 +1376,512 @@ export class ConnectorRegistry {
             properties: {
               id: { type: 'string' },
               subject: { type: 'string' },
+            },
+          },
+        },
+      ],
+    });
+  }
+
+  /**
+   * Register additional communication connectors
+   */
+  private registerAdditionalCommunicationConnectors(): void {
+    // Mailgun (Communication)
+    this.register({
+      id: 'mailgun',
+      name: 'Mailgun',
+      version: '1.0.0',
+      description: 'Send transactional emails via Mailgun',
+      category: 'communication',
+      auth: {
+        type: 'api_key',
+        description: 'Mailgun API key and domain',
+      },
+      actions: [
+        {
+          id: 'send_email',
+          name: 'Send Email',
+          description: 'Send an email via Mailgun',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              to: { type: 'string' },
+              from: { type: 'string' },
+              subject: { type: 'string' },
+              text: { type: 'string' },
+              html: { type: 'string' },
+              cc: { type: 'array', items: { type: 'string' } },
+              bcc: { type: 'array', items: { type: 'string' } },
+            },
+            required: ['to', 'from', 'subject'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+            },
+          },
+        },
+      ],
+    });
+
+    // Postmark (Communication)
+    this.register({
+      id: 'postmark',
+      name: 'Postmark',
+      version: '1.0.0',
+      description: 'Send transactional emails via Postmark',
+      category: 'communication',
+      auth: {
+        type: 'api_key',
+        description: 'Postmark server API token',
+      },
+      actions: [
+        {
+          id: 'send_email',
+          name: 'Send Email',
+          description: 'Send an email via Postmark',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              to: { type: 'string' },
+              from: { type: 'string' },
+              subject: { type: 'string' },
+              textBody: { type: 'string' },
+              htmlBody: { type: 'string' },
+              cc: { type: 'array', items: { type: 'string' } },
+              bcc: { type: 'array', items: { type: 'string' } },
+            },
+            required: ['to', 'from', 'subject'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              messageId: { type: 'string' },
+            },
+          },
+        },
+      ],
+    });
+
+    // Telegram (Communication)
+    this.register({
+      id: 'telegram',
+      name: 'Telegram',
+      version: '1.0.0',
+      description: 'Send messages via Telegram Bot API',
+      category: 'communication',
+      auth: {
+        type: 'api_key',
+        description: 'Telegram bot token',
+      },
+      actions: [
+        {
+          id: 'send_message',
+          name: 'Send Message',
+          description: 'Send a message to a Telegram chat',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              chatId: { type: 'string' },
+              text: { type: 'string' },
+              parseMode: { type: 'string', enum: ['HTML', 'Markdown', 'MarkdownV2'] },
+            },
+            required: ['chatId', 'text'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              messageId: { type: 'number' },
+            },
+          },
+        },
+        {
+          id: 'get_updates',
+          name: 'Get Updates',
+          description: 'Get updates (messages) from Telegram',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              offset: { type: 'number' },
+              limit: { type: 'number' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              updates: { type: 'array' },
+            },
+          },
+        },
+      ],
+    });
+
+    // Zendesk (Communication)
+    this.register({
+      id: 'zendesk',
+      name: 'Zendesk',
+      version: '1.0.0',
+      description: 'Manage Zendesk support tickets',
+      category: 'communication',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['read', 'write'],
+      },
+      actions: [
+        {
+          id: 'create_ticket',
+          name: 'Create Ticket',
+          description: 'Create a new support ticket',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              subject: { type: 'string' },
+              comment: { type: 'string' },
+              priority: { type: 'string', enum: ['low', 'normal', 'high', 'urgent'] },
+              type: { type: 'string', enum: ['question', 'incident', 'problem', 'task'] },
+            },
+            required: ['subject', 'comment'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+            },
+          },
+        },
+        {
+          id: 'get_tickets',
+          name: 'Get Tickets',
+          description: 'Get tickets from Zendesk',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              status: { type: 'string', enum: ['new', 'open', 'pending', 'hold', 'solved', 'closed'] },
+              limit: { type: 'number' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              tickets: { type: 'array' },
+            },
+          },
+        },
+      ],
+    });
+
+    // Zoom (Communication)
+    this.register({
+      id: 'zoom',
+      name: 'Zoom',
+      version: '1.0.0',
+      description: 'Create and manage Zoom meetings',
+      category: 'communication',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['meeting:write', 'meeting:read'],
+      },
+      actions: [
+        {
+          id: 'create_meeting',
+          name: 'Create Meeting',
+          description: 'Create a new Zoom meeting',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              topic: { type: 'string' },
+              startTime: { type: 'string' },
+              duration: { type: 'number' },
+              timezone: { type: 'string' },
+              type: { type: 'number' },
+            },
+            required: ['topic'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              join_url: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'get_meetings',
+          name: 'Get Meetings',
+          description: 'Get Zoom meetings',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              userId: { type: 'string' },
+              pageSize: { type: 'number' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              meetings: { type: 'array' },
+            },
+          },
+        },
+      ],
+    });
+  }
+
+  /**
+   * Register productivity connectors
+   */
+  private registerProductivityConnectors(): void {
+    // Google Calendar (Productivity)
+    this.register({
+      id: 'google_calendar',
+      name: 'Google Calendar',
+      version: '1.0.0',
+      description: 'Manage Google Calendar events',
+      category: 'productivity',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
+      },
+      actions: [
+        {
+          id: 'create_event',
+          name: 'Create Event',
+          description: 'Create a calendar event',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              calendarId: { type: 'string' },
+              summary: { type: 'string' },
+              start: { type: 'string' },
+              end: { type: 'string' },
+              description: { type: 'string' },
+              location: { type: 'string' },
+            },
+            required: ['summary', 'start', 'end'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              htmlLink: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'get_events',
+          name: 'Get Events',
+          description: 'Get calendar events',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              calendarId: { type: 'string' },
+              timeMin: { type: 'string' },
+              timeMax: { type: 'string' },
+              maxResults: { type: 'number' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              events: { type: 'array' },
+            },
+          },
+        },
+        {
+          id: 'list_calendars',
+          name: 'List Calendars',
+          description: 'List available calendars',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              calendars: { type: 'array' },
+            },
+          },
+        },
+      ],
+    });
+
+    // Google Drive (Productivity)
+    this.register({
+      id: 'google_drive',
+      name: 'Google Drive',
+      version: '1.0.0',
+      description: 'Upload and manage files in Google Drive',
+      category: 'productivity',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/drive.file'],
+      },
+      actions: [
+        {
+          id: 'upload_file',
+          name: 'Upload File',
+          description: 'Upload a file to Google Drive',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              content: { type: 'string' },
+              mimeType: { type: 'string' },
+              parentFolderId: { type: 'string' },
+            },
+            required: ['name', 'content'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              webViewLink: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'list_files',
+          name: 'List Files',
+          description: 'List files in Google Drive',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string' },
+              pageSize: { type: 'number' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              files: { type: 'array' },
+            },
+          },
+        },
+        {
+          id: 'download_file',
+          name: 'Download File',
+          description: 'Download a file from Google Drive',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              fileId: { type: 'string' },
+            },
+            required: ['fileId'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              content: { type: 'string' },
+            },
+          },
+        },
+      ],
+    });
+  }
+
+  /**
+   * Register developer tools connectors
+   */
+  private registerDeveloperToolsConnectors(): void {
+    // GitHub (Developer Tools)
+    this.register({
+      id: 'github',
+      name: 'GitHub',
+      version: '1.0.0',
+      description: 'Manage GitHub repositories and issues',
+      category: 'productivity',
+      oauthProvider: 'nango',
+      auth: {
+        type: 'oauth2',
+        scopes: ['repo', 'issues:write'],
+      },
+      actions: [
+        {
+          id: 'create_repository',
+          name: 'Create Repository',
+          description: 'Create a new GitHub repository',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              description: { type: 'string' },
+              private: { type: 'boolean' },
+            },
+            required: ['name'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              html_url: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'create_issue',
+          name: 'Create Issue',
+          description: 'Create a new GitHub issue',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              owner: { type: 'string' },
+              repo: { type: 'string' },
+              title: { type: 'string' },
+              body: { type: 'string' },
+              labels: { type: 'array', items: { type: 'string' } },
+            },
+            required: ['owner', 'repo', 'title'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              number: { type: 'number' },
+            },
+          },
+        },
+        {
+          id: 'get_issues',
+          name: 'Get Issues',
+          description: 'Get issues from a repository',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              owner: { type: 'string' },
+              repo: { type: 'string' },
+              state: { type: 'string', enum: ['open', 'closed', 'all'] },
+              perPage: { type: 'number' },
+            },
+            required: ['owner', 'repo'],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              issues: { type: 'array' },
+            },
+          },
+        },
+        {
+          id: 'list_repositories',
+          name: 'List Repositories',
+          description: 'List GitHub repositories',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['all', 'owner', 'member'] },
+              perPage: { type: 'number' },
+            },
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              repositories: { type: 'array' },
             },
           },
         },

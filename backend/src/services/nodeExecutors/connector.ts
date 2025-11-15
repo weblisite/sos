@@ -346,6 +346,46 @@ async function executeConnectorAction(
         return executeOutlook(actionId, input, credentials as any);
       }
 
+      case 'mailgun': {
+        const { executeMailgun } = await import('./connectors/mailgun');
+        return executeMailgun(actionId, input, credentials as any);
+      }
+
+      case 'postmark': {
+        const { executePostmark } = await import('./connectors/postmark');
+        return executePostmark(actionId, input, credentials as any);
+      }
+
+      case 'telegram': {
+        const { executeTelegram } = await import('./connectors/telegram');
+        return executeTelegram(actionId, input, credentials as any);
+      }
+
+      case 'zendesk': {
+        const { executeZendesk } = await import('./connectors/zendesk');
+        return executeZendesk(actionId, input, credentials as any);
+      }
+
+      case 'zoom': {
+        const { executeZoom } = await import('./connectors/zoom');
+        return executeZoom(actionId, input, credentials as any);
+      }
+
+      case 'google_calendar': {
+        const { executeGoogleCalendar } = await import('./connectors/googleCalendar');
+        return executeGoogleCalendar(actionId, input, credentials as any);
+      }
+
+      case 'google_drive': {
+        const { executeGoogleDrive } = await import('./connectors/googleDrive');
+        return executeGoogleDrive(actionId, input, credentials as any);
+      }
+
+      case 'github': {
+        const { executeGitHub } = await import('./connectors/github');
+        return executeGitHub(actionId, input, credentials as any);
+      }
+
       case 'slack': {
         // Use existing Slack executor
         const { executeSlack } = await import('./slack');
