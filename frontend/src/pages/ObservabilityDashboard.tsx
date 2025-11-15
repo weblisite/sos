@@ -59,6 +59,16 @@ export default function ObservabilityDashboard() {
     refetchInterval: 30000,
   });
 
+  // Fetch code execution metrics
+  const { data: codeMetrics } = useQuery({
+    queryKey: ['code-execution-metrics', timeRange],
+    queryFn: async () => {
+      const response = await api.get(`/code-agents/analytics?timeRange=${timeRange === '1h' ? '7d' : timeRange}`);
+      return response.data;
+    },
+    refetchInterval: 30000,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 animate-fade-in p-6">
@@ -210,6 +220,107 @@ export default function ObservabilityDashboard() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Code Execution Metrics */}
+      {codeMetrics?.stats && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-sm mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Code Execution Metrics</h3>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total Executions</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  {codeMetrics.stats.totalExecutions?.toLocaleString() || 0}
+                </div>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Success Rate</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  {((codeMetrics.stats.successRate || 0) * 100).toFixed(1)}%
+                </div>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Avg Duration</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  {codeMetrics.stats.avgDurationMs > 0
+                    ? `${(codeMetrics.stats.avgDurationMs / 1000).toFixed(2)}s`
+                    : 'N/A'}
+                </div>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total Tokens</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  {codeMetrics.stats.totalTokensUsed > 0
+                    ? codeMetrics.stats.totalTokensUsed.toLocaleString()
+                    : 'N/A'}
+                </div>
+              </div>
+            </div>
+
+            {/* Runtime Breakdown */}
+            {codeMetrics.stats.executionsByRuntime && Object.keys(codeMetrics.stats.executionsByRuntime).length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Executions by Runtime</h4>
+                <div className="space-y-2">
+                  {Object.entries(codeMetrics.stats.executionsByRuntime).map(([runtime, count]: [string, any]) => {
+                    const percentage = codeMetrics.stats.totalExecutions > 0
+                      ? ((count / codeMetrics.stats.totalExecutions) * 100).toFixed(1)
+                      : 0;
+                    return (
+                      <div key={runtime}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-700 dark:text-gray-300">{runtime}</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {count} ({percentage}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-indigo-500 h-2 rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Language Breakdown */}
+            {codeMetrics.stats.executionsByLanguage && Object.keys(codeMetrics.stats.executionsByLanguage).length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Executions by Language</h4>
+                <div className="space-y-2">
+                  {Object.entries(codeMetrics.stats.executionsByLanguage).map(([language, count]: [string, any]) => {
+                    const percentage = codeMetrics.stats.totalExecutions > 0
+                      ? ((count / codeMetrics.stats.totalExecutions) * 100).toFixed(1)
+                      : 0;
+                    return (
+                      <div key={language}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-700 dark:text-gray-300 capitalize">{language}</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {count} ({percentage}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-blue-500 h-2 rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Error Logs */}
