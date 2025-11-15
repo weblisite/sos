@@ -39,6 +39,7 @@ import { executeOSINTNode } from './osint';
 import { executeOCR } from './ocr';
 import { executeHumanPrompt } from './humanPrompt';
 import { executeWebScrape } from './webScrape';
+import { executeBrowserAutomation } from './browserAutomation';
 
 export async function executeNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   const { nodeId, config } = context;
@@ -70,6 +71,8 @@ export async function executeNode(context: NodeExecutionContext): Promise<NodeEx
       result = await executeTransform(context);
     } else if (nodeType === 'action.web_scrape') {
       result = await executeWebScrape(context);
+    } else if (nodeType === 'action.browser_automation') {
+      result = await executeBrowserAutomation(context);
     } else if (nodeType === 'ai.llm') {
       result = await executeLLM(context);
     } else if (nodeType === 'ai.embedding') {
