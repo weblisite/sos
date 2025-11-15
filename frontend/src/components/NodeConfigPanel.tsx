@@ -27,6 +27,34 @@ export default function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigP
     enabled: node?.data?.type === 'ai.rag' || node?.data?.type === 'ai.document_ingest',
   });
 
+  // Check if this is an integration node
+  const isIntegrationNode = node?.data?.type?.startsWith('integration.');
+  const connectorId = isIntegrationNode ? (node.data.type as string).replace('integration.', '') : null;
+
+  // Fetch connector info and connection status for integration nodes
+  const { data: connectorInfo } = useQuery({
+    queryKey: ['connector', connectorId],
+    queryFn: async () => {
+      if (!connectorId) return null;
+      const response = await api.get(`/connectors/${connectorId}`);
+      return response.data;
+    },
+    enabled: !!connectorId,
+  });
+
+  const { data: connectorCredentials } = useQuery({
+    queryKey: ['connectors', 'credentials'],
+    queryFn: async () => {
+      const response = await api.get('/connectors/credentials');
+      return response.data;
+    },
+    enabled: !!connectorId,
+  });
+
+  const isConnectorConnected = connectorId && connectorCredentials?.some(
+    (c: any) => c.connectorId === connectorId
+  );
+
   useEffect(() => {
     if (node) {
       setConfig(node.data.config || {});
@@ -172,6 +200,98 @@ export default function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigP
       setConnectionStatus('error');
       setIsConnecting(false);
       alert(`Failed to retrieve credentials: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  // Handle connector connection for integration nodes
+  const handleConnectConnector = async () => {
+    if (!connectorId || !connectorInfo) return;
+
+    try {
+      setIsConnecting(true);
+      setConnectionStatus('connecting');
+
+      if (connectorInfo.auth?.type === 'oauth2') {
+        // Initiate OAuth flow
+        const response = await api.post(`/connectors/${connectorId}/connect`);
+        const data = response.data;
+
+        if (data.authUrl) {
+          // Open OAuth flow in popup
+          const width = 600;
+          const height = 700;
+          const left = window.screen.width / 2 - width / 2;
+          const top = window.screen.height / 2 - height / 2;
+
+          const oauthWindow = window.open(
+            data.authUrl,
+            'OAuth',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+          );
+
+          // Listen for OAuth callback
+          const checkOAuthCallback = setInterval(() => {
+            if (oauthWindow?.closed) {
+              clearInterval(checkOAuthCallback);
+              // Refetch credentials
+              window.location.reload(); // Simple reload to refresh connection status
+            }
+          }, 1000);
+        } else if (data.requiresManualSetup) {
+          alert(`Please configure ${connectorInfo.name} credentials manually. Auth type: ${data.authType}`);
+          setIsConnecting(false);
+          setConnectionStatus('idle');
+        }
+      } else if (connectorInfo.auth?.type === 'api_key') {
+        // Show API key input modal
+        const apiKey = prompt(`Enter your ${connectorInfo.name} API key:`);
+        if (apiKey) {
+          try {
+            await api.post('/connectors/credentials', {
+              connectorId,
+              credentials: {
+                api_key: apiKey,
+              },
+            });
+            // Refetch credentials
+            window.location.reload();
+          } catch (error: any) {
+            alert(`Failed to save API key: ${error.response?.data?.error || error.message}`);
+            setIsConnecting(false);
+            setConnectionStatus('idle');
+          }
+        } else {
+          setIsConnecting(false);
+          setConnectionStatus('idle');
+        }
+      } else if (connectorInfo.auth?.type === 'connection_string') {
+        // Show connection string input modal
+        const connectionString = prompt(`Enter your ${connectorInfo.name} connection string:`);
+        if (connectionString) {
+          try {
+            await api.post('/connectors/credentials', {
+              connectorId,
+              credentials: {
+                connection_string: connectionString,
+              },
+            });
+            // Refetch credentials
+            window.location.reload();
+          } catch (error: any) {
+            alert(`Failed to save connection string: ${error.response?.data?.error || error.message}`);
+            setIsConnecting(false);
+            setConnectionStatus('idle');
+          }
+        } else {
+          setIsConnecting(false);
+          setConnectionStatus('idle');
+        }
+      }
+    } catch (error: any) {
+      console.error('Failed to connect connector:', error);
+      alert(`Failed to connect: ${error.response?.data?.error || error.message}`);
+      setIsConnecting(false);
+      setConnectionStatus('error');
     }
   };
 
@@ -478,6 +598,45 @@ export default function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigP
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Connector Connection Section for Integration Nodes */}
+        {isIntegrationNode && connectorInfo && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {connectorInfo.name} Connection
+              </h4>
+              {isConnectorConnected ? (
+                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                  ✓ Connected
+                </span>
+              ) : (
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded">
+                  Not Connected
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+              {connectorInfo.description}
+            </p>
+            {!isConnectorConnected ? (
+              <button
+                onClick={handleConnectConnector}
+                disabled={isConnecting}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-md transition-colors"
+              >
+                {isConnecting ? 'Connecting...' : `Connect ${connectorInfo.name}`}
+              </button>
+            ) : (
+              <div className="text-xs text-green-700 dark:text-green-300">
+                ✓ This connector is connected. You can configure the action below.
+              </div>
+            )}
+            {connectionStatus === 'error' && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">Connection failed. Please try again.</p>
+            )}
+          </div>
+        )}
+
         {/* OAuth Connection Section for Email Triggers */}
         {(node.data.type as string)?.startsWith('trigger.email.gmail') && (
           <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
@@ -707,6 +866,22 @@ export default function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigP
               // Skip credentials field for email triggers (handled by OAuth)
               if (key === 'credentials' && (node.data.type as string)?.startsWith('trigger.email.')) {
                 return null;
+              }
+
+              // Skip credentials field for integration nodes (handled by connector connection)
+              if (key === 'credentials' && isIntegrationNode) {
+                return null;
+              }
+
+              // Show warning if integration node is not connected
+              if (isIntegrationNode && !isConnectorConnected && key === 'action') {
+                return (
+                  <div key={key} className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      ⚠️ Please connect {connectorInfo?.name} above before configuring the action.
+                    </p>
+                  </div>
+                );
               }
               
               return (
