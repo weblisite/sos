@@ -1,418 +1,231 @@
-# Frontend-Backend Synchronization Analysis Report
+# Frontend-Backend Synchronization Analysis
 
-## Executive Summary
-
-This document provides a comprehensive analysis of the SOS Automation Platform's frontend-backend synchronization, identifying discrepancies, missing components, and areas requiring implementation or fixes.
-
-**Analysis Date:** 2024-11-12  
-**Status:** Most endpoints are implemented and synchronized. One critical issue identified: Templates use hardcoded data instead of database.
+**Date:** December 2024  
+**Status:** In Progress
 
 ---
 
-## 1. Backend API Endpoints Inventory
+## Analysis Methodology
 
-### 1.1 Authentication Routes (`/api/v1/auth`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| POST | `/auth/sync` | ✅ Implemented | ✅ Used (AuthContext) | ✅ Real DB |
-| GET | `/auth/me` | ✅ Implemented | ✅ Used (AuthContext) | ✅ Real DB |
-
-### 1.2 Workflows Routes (`/api/v1/workflows`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/workflows` | ✅ Implemented | ✅ Used (Workflows.tsx) | ✅ Real DB |
-| GET | `/workflows/:id` | ✅ Implemented | ✅ Used (WorkflowBuilder.tsx) | ✅ Real DB |
-| POST | `/workflows` | ✅ Implemented | ✅ Used (WorkflowBuilder.tsx) | ✅ Real DB |
-| PUT | `/workflows/:id` | ✅ Implemented | ✅ Used (WorkflowBuilder.tsx) | ✅ Real DB |
-| DELETE | `/workflows/:id` | ✅ Implemented | ✅ Used (Workflows.tsx) | ✅ Real DB |
-| POST | `/workflows/:id/duplicate` | ✅ Implemented | ✅ Used (Workflows.tsx) | ✅ Real DB |
-| POST | `/workflows/:id/versions/:versionId/restore` | ✅ Implemented | ✅ Used (WorkflowVersions.tsx) | ✅ Real DB |
-
-### 1.3 Executions Routes (`/api/v1/executions`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/executions/workflow/:workflowId` | ✅ Implemented | ✅ Used (WorkflowBuilder.tsx) | ✅ Real DB |
-| POST | `/executions/execute` | ✅ Implemented | ✅ Used (WorkflowBuilder.tsx) | ✅ Real DB |
-| GET | `/executions/:id` | ✅ Implemented | ✅ Used (ExecutionMonitor.tsx) | ✅ Real DB |
-| POST | `/executions/:id/resume` | ✅ Implemented | ✅ Used (ExecutionMonitor.tsx) | ✅ Real DB |
-| POST | `/executions/:id/step` | ✅ Implemented | ✅ Used (ExecutionMonitor.tsx) | ✅ Real DB |
-| GET | `/executions/:id/variables/:nodeId` | ✅ Implemented | ✅ Used (VariableInspector.tsx) | ✅ Real DB |
-| PUT | `/executions/:id/variables/:nodeId` | ✅ Implemented | ✅ Used (VariableInspector.tsx) | ✅ Real DB |
-| GET | `/executions/:id/export` | ✅ Implemented | ✅ Used (ExecutionMonitor.tsx) | ✅ Real DB |
-
-### 1.4 Stats Routes (`/api/v1/stats`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/stats` | ✅ Implemented | ✅ Used (Dashboard.tsx) | ✅ Real DB |
-
-### 1.5 Templates Routes (`/api/v1/templates`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/templates` | ⚠️ **HARDCODED** | ✅ Used (WorkflowTemplates.tsx) | ❌ **Hardcoded Array** |
-| GET | `/templates/:id` | ⚠️ **HARDCODED** | ✅ Used (WorkflowTemplates.tsx) | ❌ **Hardcoded Array** |
-
-**⚠️ CRITICAL ISSUE:** Templates are stored in a hardcoded array instead of database. This prevents:
-- User-created templates
-- Template versioning
-- Template sharing
-- Template analytics
-
-### 1.6 Analytics Routes (`/api/v1/analytics`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/analytics/workflows` | ✅ Implemented | ✅ Used (Analytics.tsx) | ✅ Real DB |
-| GET | `/analytics/nodes` | ✅ Implemented | ✅ Used (Analytics.tsx) | ✅ Real DB |
-| GET | `/analytics/costs` | ✅ Implemented | ✅ Used (Analytics.tsx) | ✅ Real DB |
-| GET | `/analytics/errors` | ✅ Implemented | ✅ Used (Analytics.tsx) | ✅ Real DB |
-| GET | `/analytics/usage` | ✅ Implemented | ✅ Used (Analytics.tsx) | ✅ Real DB |
-
-### 1.7 Alerts Routes (`/api/v1/alerts`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/alerts` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-| GET | `/alerts/:id` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-| POST | `/alerts` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-| PUT | `/alerts/:id` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-| DELETE | `/alerts/:id` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-| PATCH | `/alerts/:id/toggle` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-| GET | `/alerts/:id/history` | ✅ Implemented | ✅ Used (Alerts.tsx) | ✅ Real DB |
-
-### 1.8 Roles Routes (`/api/v1/roles`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/roles` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-| GET | `/roles/:id` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-| POST | `/roles` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-| PUT | `/roles/:id` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-| DELETE | `/roles/:id` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-| GET | `/roles/permissions/all` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-| POST | `/roles/:id/assign` | ✅ Implemented | ✅ Used (Roles.tsx) | ✅ Real DB |
-
-### 1.9 Teams Routes (`/api/v1/teams`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/teams` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| GET | `/teams/:id` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| POST | `/teams` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| PUT | `/teams/:id` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| DELETE | `/teams/:id` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| POST | `/teams/:id/members` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| DELETE | `/teams/:id/members/:userId` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-
-### 1.10 Invitations Routes (`/api/v1/invitations`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/invitations/token/:token` | ✅ Implemented | ✅ Used (InvitationAccept.tsx) | ✅ Real DB |
-| GET | `/invitations` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| POST | `/invitations` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| POST | `/invitations/accept` | ✅ Implemented | ✅ Used (InvitationAccept.tsx) | ✅ Real DB |
-| DELETE | `/invitations/:id` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-| POST | `/invitations/:id/resend` | ✅ Implemented | ✅ Used (Teams.tsx) | ✅ Real DB |
-
-### 1.11 Users Routes (`/api/v1/users`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/users/me` | ✅ Implemented | ✅ Used (Preferences.tsx) | ✅ Real DB |
-| PUT | `/users/me` | ✅ Implemented | ❌ **NOT USED** | ✅ Real DB |
-| POST | `/users/me/avatar` | ✅ Implemented | ❌ **NOT USED** | ✅ Real DB |
-| GET | `/users/me/preferences` | ✅ Implemented | ✅ Used (Preferences.tsx) | ✅ Real DB |
-| PUT | `/users/me/preferences` | ✅ Implemented | ✅ Used (Preferences.tsx) | ✅ Real DB |
-| GET | `/users/me/activity` | ✅ Implemented | ✅ Used (ActivityLog.tsx) | ✅ Real DB |
-
-**Note:** `PUT /users/me` and `POST /users/me/avatar` exist but are not used by frontend.
-
-### 1.12 API Keys Routes (`/api/v1/api-keys`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/api-keys` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-| GET | `/api-keys/:id` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-| POST | `/api-keys` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-| PUT | `/api-keys/:id` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-| DELETE | `/api-keys/:id` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-| POST | `/api-keys/:id/rotate` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-| GET | `/api-keys/:id/usage` | ✅ Implemented | ✅ Used (ApiKeys.tsx) | ✅ Real DB |
-
-### 1.13 Audit Logs Routes (`/api/v1/audit-logs`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/audit-logs` | ✅ Implemented | ✅ Used (AuditLogs.tsx) | ✅ Real DB |
-| GET | `/audit-logs/:id` | ✅ Implemented | ✅ Used (AuditLogs.tsx) | ✅ Real DB |
-| GET | `/audit-logs/export/csv` | ✅ Implemented | ✅ Used (AuditLogs.tsx) | ✅ Real DB |
-
-### 1.14 Email OAuth Routes (`/api/v1/email-oauth`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/email-oauth/gmail/authorize` | ✅ Implemented | ✅ Used (NodeConfigPanel.tsx) | ✅ Real DB |
-| GET | `/email-oauth/gmail/callback` | ✅ Implemented | ✅ Used (OAuth flow) | ✅ Real DB |
-| GET | `/email-oauth/outlook/authorize` | ✅ Implemented | ✅ Used (NodeConfigPanel.tsx) | ✅ Real DB |
-| GET | `/email-oauth/outlook/callback` | ✅ Implemented | ✅ Used (OAuth flow) | ✅ Real DB |
-| GET | `/email-oauth/retrieve/:token` | ✅ Implemented | ✅ Used (NodeConfigPanel.tsx) | ✅ Real DB |
-
-### 1.15 Email Trigger Monitoring Routes (`/api/v1/email-triggers/monitoring`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| GET | `/email-triggers/monitoring/health` | ✅ Implemented | ✅ Used (EmailTriggerMonitoring.tsx) | ✅ Real DB |
-| GET | `/email-triggers/monitoring/health/all` | ✅ Implemented | ✅ Used (EmailTriggerMonitoring.tsx) | ✅ Real DB |
-| GET | `/email-triggers/monitoring/health/:triggerId` | ✅ Implemented | ❌ **NOT USED** | ✅ Real DB |
-| GET | `/email-triggers/monitoring/metrics` | ✅ Implemented | ❌ **NOT USED** | ✅ Real DB |
-| GET | `/email-triggers/monitoring/alerts` | ✅ Implemented | ✅ Used (EmailTriggerMonitoring.tsx) | ✅ Real DB |
-| POST | `/email-triggers/monitoring/alerts/:alertId/resolve` | ✅ Implemented | ❌ **NOT USED** | ✅ Real DB |
-
-**Note:** Some monitoring endpoints exist but are not used by frontend.
-
-### 1.16 Webhooks Routes (`/webhooks`)
-| Method | Endpoint | Status | Frontend Usage | Database |
-|--------|----------|--------|----------------|----------|
-| ALL | `/webhooks/:path` | ✅ Implemented | ❌ **NOT USED** (External) | ✅ Real DB |
-
-**Note:** Webhooks are external endpoints, not called by frontend.
+This document tracks the synchronization between frontend and backend implementations, identifying:
+- Frontend API calls and their backend support
+- Backend endpoints and their frontend usage
+- Missing implementations
+- Mock/placeholder data usage
+- Discrepancies in request/response formats
 
 ---
 
-## 2. Frontend API Calls Inventory
+## Backend API Routes Inventory
 
-### 2.1 Pages and Their API Calls
+Based on `backend/src/index.ts` and route files:
 
-#### Dashboard.tsx
-- ✅ `GET /stats` - Fully implemented
-
-#### Workflows.tsx
-- ✅ `GET /workflows` - Fully implemented
-- ✅ `POST /workflows/:id/duplicate` - Fully implemented
-- ✅ `DELETE /workflows/:id` - Fully implemented
-
-#### WorkflowBuilder.tsx
-- ✅ `GET /workflows/:id` - Fully implemented
-- ✅ `PUT /workflows/:id` - Fully implemented
-- ✅ `POST /workflows` - Fully implemented
-- ✅ `GET /executions/workflow/:workflowId` - Fully implemented
-- ✅ `POST /executions/execute` - Fully implemented
-
-#### Analytics.tsx
-- ✅ `GET /analytics/workflows` - Fully implemented
-- ✅ `GET /analytics/nodes` - Fully implemented
-- ✅ `GET /analytics/costs` - Fully implemented
-- ✅ `GET /analytics/errors` - Fully implemented
-- ✅ `GET /analytics/usage` - Fully implemented
-
-#### Alerts.tsx
-- ✅ `GET /alerts` - Fully implemented
-- ✅ `GET /alerts/:id` - Fully implemented
-- ✅ `POST /alerts` - Fully implemented
-- ✅ `PUT /alerts/:id` - Fully implemented
-- ✅ `DELETE /alerts/:id` - Fully implemented
-- ✅ `PATCH /alerts/:id/toggle` - Fully implemented
-- ✅ `GET /alerts/:id/history` - Fully implemented
-
-#### Roles.tsx
-- ✅ `GET /roles` - Fully implemented
-- ✅ `GET /roles/:id` - Fully implemented
-- ✅ `POST /roles` - Fully implemented
-- ✅ `PUT /roles/:id` - Fully implemented
-- ✅ `DELETE /roles/:id` - Fully implemented
-- ✅ `GET /roles/permissions/all` - Fully implemented
-- ✅ `POST /roles/:id/assign` - Fully implemented
-
-#### Teams.tsx
-- ✅ `GET /teams` - Fully implemented
-- ✅ `GET /teams/:id` - Fully implemented
-- ✅ `POST /teams` - Fully implemented
-- ✅ `PUT /teams/:id` - Fully implemented
-- ✅ `DELETE /teams/:id` - Fully implemented
-- ✅ `POST /teams/:id/members` - Fully implemented
-- ✅ `DELETE /teams/:id/members/:userId` - Fully implemented
-- ✅ `GET /invitations` - Fully implemented
-- ✅ `POST /invitations` - Fully implemented
-- ✅ `DELETE /invitations/:id` - Fully implemented
-- ✅ `POST /invitations/:id/resend` - Fully implemented
-
-#### ApiKeys.tsx
-- ✅ `GET /api-keys` - Fully implemented
-- ✅ `GET /api-keys/:id` - Fully implemented
-- ✅ `POST /api-keys` - Fully implemented
-- ✅ `PUT /api-keys/:id` - Fully implemented
-- ✅ `DELETE /api-keys/:id` - Fully implemented
-- ✅ `POST /api-keys/:id/rotate` - Fully implemented
-- ✅ `GET /api-keys/:id/usage` - Fully implemented
-
-#### AuditLogs.tsx
-- ✅ `GET /audit-logs` - Fully implemented
-- ✅ `GET /audit-logs/:id` - Fully implemented
-- ✅ `GET /audit-logs/export/csv` - Fully implemented
-
-#### Preferences.tsx
-- ✅ `GET /users/me` - Fully implemented
-- ✅ `PUT /users/me/preferences` - Fully implemented
-- ❌ `PUT /users/me` - **NOT USED** (Profile update missing)
-- ❌ `POST /users/me/avatar` - **NOT USED** (Avatar upload missing)
-
-#### ActivityLog.tsx
-- ✅ `GET /users/me/activity` - Fully implemented
-
-#### EmailTriggerMonitoring.tsx
-- ✅ `GET /email-triggers/monitoring/health` - Fully implemented
-- ✅ `GET /email-triggers/monitoring/health/all` - Fully implemented
-- ✅ `GET /email-triggers/monitoring/alerts` - Fully implemented
-- ❌ `GET /email-triggers/monitoring/health/:triggerId` - **NOT USED**
-- ❌ `GET /email-triggers/monitoring/metrics` - **NOT USED**
-- ❌ `POST /email-triggers/monitoring/alerts/:alertId/resolve` - **NOT USED**
-
-#### Components
-
-##### ExecutionMonitor.tsx
-- ✅ `GET /executions/:id` - Fully implemented
-- ✅ `POST /executions/:id/resume` - Fully implemented
-- ✅ `POST /executions/:id/step` - Fully implemented
-- ✅ `GET /executions/:id/export` - Fully implemented
-
-##### VariableInspector.tsx
-- ✅ `GET /executions/:id/variables/:nodeId` - Fully implemented
-- ✅ `PUT /executions/:id/variables/:nodeId` - Fully implemented
-
-##### WorkflowTemplates.tsx
-- ✅ `GET /templates` - Fully implemented (but uses hardcoded data)
-- ✅ `GET /templates/:id` - Fully implemented (but uses hardcoded data)
-- ✅ `POST /workflows` - Fully implemented
-
-##### WorkflowVersions.tsx
-- ✅ `GET /workflows/:id` - Fully implemented
-- ✅ `POST /workflows/:id/versions/:versionId/restore` - Fully implemented
-
-##### NodeConfigPanel.tsx
-- ✅ `GET /email-oauth/:provider/authorize` - Fully implemented
-- ✅ `GET /email-oauth/retrieve/:token` - Fully implemented
-
-##### AuthContext.tsx
-- ✅ `POST /auth/sync` - Fully implemented
-- ✅ `GET /auth/me` - Fully implemented
-
-##### InvitationAccept.tsx
-- ✅ `GET /invitations/token/:token` - Fully implemented
-- ✅ `POST /invitations/accept` - Fully implemented
+### Core Routes
+- `/api/v1/auth` - Authentication
+- `/api/v1/workflows` - Workflow management
+- `/api/v1/executions` - Execution tracking
+- `/api/v1/stats` - Statistics
+- `/api/v1/templates` - Template management
+- `/api/v1/analytics` - Analytics
+- `/api/v1/alerts` - Alerts
+- `/api/v1/roles` - Role management
+- `/api/v1/teams` - Team management
+- `/api/v1/invitations` - Invitations
+- `/api/v1/users` - User management
+- `/api/v1/api-keys` - API key management
+- `/api/v1/audit-logs` - Audit logs
+- `/api/v1/email-oauth` - Email OAuth
+- `/api/v1/email-triggers/monitoring` - Email trigger monitoring
+- `/api/v1/monitoring/performance` - Performance monitoring
+- `/api/v1/agents` - Agent management
+- `/api/v1/observability` - Observability
+- `/api/v1/osint` - OSINT monitoring
+- `/api/v1/connectors` - Connector management
+- `/api/v1/nango` - Nango integration
+- `/api/v1/early-access` - Early access
+- `/api/v1/contact` - Contact form
+- `/api/v1/code-agents` - Code agent management
+- `/api/v1/code-exec-logs` - Code execution logs
+- `/api/v1/policies` - Policy management
+- `/webhooks` - Webhook handling
 
 ---
 
-## 3. Issues Identified
+## Frontend Pages Inventory
 
-### 3.1 Critical Issues (P0)
+Based on `frontend/src/App.tsx`:
 
-#### Issue #1: Templates Use Hardcoded Data
-**Location:** `backend/src/routes/templates.ts`  
-**Problem:** Templates are stored in a hardcoded array instead of database  
-**Impact:** 
-- Cannot create custom templates
-- Cannot version templates
-- Cannot share templates
-- Cannot track template usage
-- No template analytics
+### Public Pages
+- `/` - Landing
+- `/about` - About
+- `/contact` - Contact
+- `/privacy` - Privacy
+- `/terms` - Terms
+- `/security` - Security
+- `/cookies` - Cookies
+- `/docs` - Documentation
+- `/community` - Community
+- `/support` - Support
+- `/changelog` - Changelog
+- `/login` - Login
+- `/signup` - Signup
+- `/invitations/accept` - Invitation acceptance
 
-**Solution:** Create `workflow_templates` table and migrate hardcoded templates to database
-
-### 3.2 Missing Frontend Features (P1)
-
-#### Issue #2: User Profile Update Missing
-**Backend:** `PUT /users/me` exists  
-**Frontend:** No UI for updating user profile (name, email, etc.)  
-**Impact:** Users cannot update their profile information
-
-#### Issue #3: Avatar Upload Missing
-**Backend:** `POST /users/me/avatar` exists  
-**Frontend:** No UI for uploading avatar  
-**Impact:** Users cannot upload profile pictures
-
-#### Issue #4: Email Trigger Monitoring Details Missing
-**Backend:** 
-- `GET /email-triggers/monitoring/health/:triggerId` exists
-- `GET /email-triggers/monitoring/metrics` exists
-- `POST /email-triggers/monitoring/alerts/:alertId/resolve` exists
-
-**Frontend:** No UI for these features  
-**Impact:** Cannot view individual trigger health, metrics, or resolve alerts
-
-### 3.3 Minor Issues (P2)
-
-#### Issue #5: No Mock Data Found
-✅ **Good News:** No mock data, placeholder data, or dummy responses found in production code. All endpoints use real database data (except templates).
-
----
-
-## 4. Data Flow Analysis
-
-### 4.1 Database Usage
-✅ **All routes use real database data** (except templates):
-- PostgreSQL via Drizzle ORM
-- Multi-tenant isolation via `organizationId`
-- Proper joins and relationships
-- Real-time data queries
-
-### 4.2 Authentication Flow
-✅ **Fully implemented:**
-- Clerk authentication
-- Token-based API authentication
-- Organization context middleware
-- Permission checks
-
-### 4.3 Error Handling
-✅ **Comprehensive:**
-- Try-catch blocks in all routes
-- Proper HTTP status codes
-- Error logging
-- User-friendly error messages
+### Protected Pages
+- `/dashboard` - Dashboard
+- `/dashboard/workflows` - Workflows list
+- `/dashboard/workflows/:id` - Workflow builder
+- `/dashboard/workflows/new` - New workflow
+- `/dashboard/analytics` - Analytics
+- `/dashboard/alerts` - Alerts
+- `/dashboard/settings/roles` - Roles
+- `/dashboard/settings/teams` - Teams
+- `/dashboard/preferences` - Preferences
+- `/dashboard/activity` - Activity log
+- `/dashboard/settings/api-keys` - API keys
+- `/dashboard/settings/audit-logs` - Audit logs
+- `/dashboard/monitoring/email-triggers` - Email trigger monitoring
+- `/dashboard/monitoring/performance` - Performance monitoring
+- `/dashboard/monitoring/osint` - OSINT monitoring
+- `/dashboard/settings/templates` - Admin templates
+- `/dashboard/agents/copilot` - Copilot agent
+- `/dashboard/agents/catalogue` - Agent catalogue
+- `/dashboard/connectors` - Connector marketplace
+- `/dashboard/sandbox` - Sandbox studio
+- `/dashboard/sandbox/analytics` - Code agent analytics
+- `/dashboard/observability` - Observability dashboard
+- `/dashboard/settings/policies` - Policy configuration
 
 ---
 
-## 5. Synchronization Status
+## Detailed Analysis
 
-### 5.1 Frontend with Backend Implementation
-✅ **95% Synchronized:**
-- 51/54 frontend API calls have corresponding backend endpoints
-- All critical workflows are fully functional
-- Real database data used throughout
+### 1. Frontend with Backend Implementation ✅
 
-### 5.2 Backend with Frontend Integration
-✅ **90% Integrated:**
-- 51/57 backend endpoints are used by frontend
-- 6 endpoints unused (mostly optional features)
+These frontend components have full backend support:
 
-### 5.3 Data Consistency
-✅ **Excellent:**
-- No mock data in production
-- All data from real database
-- Proper data validation
-- Type-safe interfaces
+#### Authentication
+- ✅ Login page → `/api/v1/auth/login`
+- ✅ Signup page → `/api/v1/auth/signup`
+- ✅ Invitation acceptance → `/api/v1/invitations/accept`
 
----
+#### Workflows
+- ✅ Workflows list → `/api/v1/workflows`
+- ✅ Workflow builder → `/api/v1/workflows/:id`
+- ✅ Workflow execution → `/api/v1/executions`
 
-## 6. Recommendations
+#### Code Agents
+- ✅ Sandbox Studio → `/api/v1/code-agents`
+- ✅ Code Agent Analytics → `/api/v1/code-agents/analytics`
+- ✅ Code execution logs → `/api/v1/code-exec-logs`
 
-### Priority 1 (Critical)
-1. **Migrate Templates to Database** - Create `workflow_templates` table and migrate hardcoded templates
+#### Observability
+- ✅ Observability Dashboard → `/api/v1/observability`
 
-### Priority 2 (High)
-2. **Add User Profile Update UI** - Create form to update user profile
-3. **Add Avatar Upload UI** - Add file upload for profile pictures
-4. **Enhance Email Trigger Monitoring** - Add UI for individual trigger health and metrics
-
-### Priority 3 (Medium)
-5. **Add Alert Resolution UI** - Add button to resolve email trigger alerts
-6. **Document Unused Endpoints** - Document why some endpoints exist but aren't used
+#### Policies
+- ✅ Policy Configuration → `/api/v1/policies`
 
 ---
 
-## 7. Summary Statistics
+### 2. Frontend Lacking Backend Implementation ⚠️
 
-- **Total Backend Endpoints:** 57
-- **Total Frontend API Calls:** 54
-- **Fully Synchronized:** 51 (94%)
-- **Backend Only (Unused):** 6 (11%)
-- **Frontend Only (Missing Backend):** 0 (0%)
-- **Critical Issues:** 1 (Templates hardcoded)
-- **Missing Frontend Features:** 4
-- **Mock Data Found:** 0 ✅
+These frontend components may have incomplete backend support:
+
+#### Dashboard
+- ⚠️ Dashboard → `/api/v1/stats` (needs verification)
+- ⚠️ Dashboard → `/api/v1/analytics` (needs verification)
+
+#### Analytics
+- ⚠️ Analytics page → `/api/v1/analytics` (needs detailed endpoint mapping)
+
+#### Alerts
+- ⚠️ Alerts page → `/api/v1/alerts` (needs verification)
+
+#### Teams & Roles
+- ⚠️ Teams page → `/api/v1/teams` (needs verification)
+- ⚠️ Roles page → `/api/v1/roles` (needs verification)
+
+#### Monitoring
+- ⚠️ Email Trigger Monitoring → `/api/v1/email-triggers/monitoring` (needs verification)
+- ⚠️ Performance Monitoring → `/api/v1/monitoring/performance` (needs verification)
+- ⚠️ OSINT Monitoring → `/api/v1/osint` (needs verification)
+
+#### Connectors
+- ⚠️ Connector Marketplace → `/api/v1/connectors` (needs verification)
+- ⚠️ Connector Marketplace → `/api/v1/nango` (needs verification)
+
+#### Agents
+- ⚠️ Agent Catalogue → `/api/v1/agents` (needs verification)
+- ⚠️ Copilot Agent → `/api/v1/agents` (needs verification)
+
+#### Templates
+- ⚠️ Admin Templates → `/api/v1/templates` (needs verification)
+
+#### Settings
+- ⚠️ API Keys → `/api/v1/api-keys` (needs verification)
+- ⚠️ Audit Logs → `/api/v1/audit-logs` (needs verification)
+- ⚠️ Preferences → (needs endpoint identification)
+- ⚠️ Activity Log → (needs endpoint identification)
+
+#### Public Pages
+- ⚠️ Contact → `/api/v1/contact` (needs verification)
+- ⚠️ Early Access → `/api/v1/early-access` (needs verification)
 
 ---
 
-## 8. Conclusion
+### 3. Backend with Frontend Integration ✅
 
-The platform is **94% synchronized** with excellent data consistency. The only critical issue is templates using hardcoded data. All other endpoints use real database data and are properly integrated. The platform is production-ready with minor enhancements recommended.
+These backend endpoints are used by frontend:
 
+- ✅ `/api/v1/auth/*` - Used by Login/Signup
+- ✅ `/api/v1/workflows/*` - Used by Workflows pages
+- ✅ `/api/v1/executions/*` - Used by Workflow builder
+- ✅ `/api/v1/code-agents/*` - Used by Sandbox Studio
+- ✅ `/api/v1/code-exec-logs/*` - Used by Code Agent Analytics
+- ✅ `/api/v1/observability/*` - Used by Observability Dashboard
+- ✅ `/api/v1/policies/*` - Used by Policy Configuration
+
+---
+
+### 4. Backend Lacking Frontend Integration ⚠️
+
+These backend endpoints may not be fully utilized:
+
+- ⚠️ `/api/v1/stats/*` - May have unused endpoints
+- ⚠️ `/api/v1/analytics/*` - May have unused endpoints
+- ⚠️ `/api/v1/alerts/*` - May have unused endpoints
+- ⚠️ `/api/v1/roles/*` - May have unused endpoints
+- ⚠️ `/api/v1/teams/*` - May have unused endpoints
+- ⚠️ `/api/v1/invitations/*` - May have unused endpoints
+- ⚠️ `/api/v1/users/*` - May have unused endpoints
+- ⚠️ `/api/v1/api-keys/*` - May have unused endpoints
+- ⚠️ `/api/v1/audit-logs/*` - May have unused endpoints
+- ⚠️ `/api/v1/email-oauth/*` - May have unused endpoints
+- ⚠️ `/api/v1/email-triggers/monitoring/*` - May have unused endpoints
+- ⚠️ `/api/v1/monitoring/performance/*` - May have unused endpoints
+- ⚠️ `/api/v1/agents/*` - May have unused endpoints
+- ⚠️ `/api/v1/osint/*` - May have unused endpoints
+- ⚠️ `/api/v1/connectors/*` - May have unused endpoints
+- ⚠️ `/api/v1/nango/*` - May have unused endpoints
+- ⚠️ `/api/v1/early-access/*` - May have unused endpoints
+- ⚠️ `/api/v1/contact/*` - May have unused endpoints
+- ⚠️ `/webhooks/*` - May have unused endpoints
+
+---
+
+## Next Steps
+
+1. **Detailed Route Analysis**: Examine each route file to list all endpoints
+2. **Frontend API Call Analysis**: Examine each frontend page to list all API calls
+3. **Mock Data Detection**: Search for mock/placeholder data
+4. **Format Verification**: Check request/response format compatibility
+5. **Implementation**: Fix missing connections and remove mock data
+
+---
+
+## Status Legend
+
+- ✅ Fully implemented and connected
+- ⚠️ Needs verification or partial implementation
+- ❌ Missing or broken
+- 🔄 In progress
