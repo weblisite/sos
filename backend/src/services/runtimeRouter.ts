@@ -3,6 +3,9 @@ import { e2bRuntime } from './runtimes/e2bRuntime';
 import { executeCode } from './nodeExecutors/code';
 import { NodeExecutionContext } from '@sos/shared';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { db } from '../config/database';
+import { codeExecLogs } from '../../drizzle/schema';
+import { createId } from '@paralleldrive/cuid2';
 
 /**
  * Runtime Router Service
@@ -27,11 +30,27 @@ export interface CodeExecutionConfig {
 }
 
 export class RuntimeRouter {
+  private runtimeMetrics: Map<string, {
+    count: number;
+    totalDuration: number;
+    successCount: number;
+    errorCount: number;
+    lastUsed: Date;
+  }> = new Map();
+
   /**
    * Route code execution to appropriate runtime
    */
   async route(
-    config: CodeExecutionConfig
+    config: CodeExecutionConfig,
+    context?: {
+      userId?: string;
+      organizationId?: string;
+      workspaceId?: string;
+      workflowId?: string;
+      nodeId?: string;
+      executionId?: string;
+    }
   ): Promise<NodeExecutionResult> {
     const tracer = trace.getTracer('sos-runtime-router');
     const span = tracer.startSpan('runtimeRouter.route', {
@@ -44,27 +63,52 @@ export class RuntimeRouter {
       },
     });
 
+    const startTime = Date.now();
+    let selectedRuntime: string = config.runtime || 'auto';
+    let result: NodeExecutionResult;
+
     try {
       // If runtime is explicitly specified, use it
       if (config.runtime && config.runtime !== 'auto') {
+        selectedRuntime = config.runtime;
         span.setAttributes({
-          'runtime.selected': config.runtime,
+          'runtime.selected': selectedRuntime,
           'runtime.reason': 'explicitly_specified',
         });
-        return await this.executeWithRuntime(config.runtime, config);
+        result = await this.executeWithRuntime(selectedRuntime as any, config);
+      } else {
+        // Auto-route based on conditions
+        selectedRuntime = this.selectRuntime(config);
+        
+        span.setAttributes({
+          'runtime.selected': selectedRuntime,
+          'runtime.reason': 'auto_routed',
+        });
+        result = await this.executeWithRuntime(selectedRuntime as any, config);
       }
 
-      // Auto-route based on conditions
-      const selectedRuntime = this.selectRuntime(config);
+      const duration = Date.now() - startTime;
       
+      // Track runtime metrics
+      this.trackRuntimeMetrics(selectedRuntime, duration, result.success, context);
+
       span.setAttributes({
-        'runtime.selected': selectedRuntime,
-        'runtime.reason': 'auto_routed',
+        'runtime.duration_ms': duration,
+        'runtime.success': result.success,
       });
       span.setStatus({ code: SpanStatusCode.OK });
 
-      return await this.executeWithRuntime(selectedRuntime, config);
+      return result;
     } catch (error: any) {
+      const duration = Date.now() - startTime;
+      
+      // Track runtime metrics (error)
+      this.trackRuntimeMetrics(selectedRuntime, duration, false, context);
+
+      span.setAttributes({
+        'runtime.duration_ms': duration,
+        'runtime.success': false,
+      });
       span.recordException(error);
       span.setStatus({
         code: SpanStatusCode.ERROR,
@@ -74,6 +118,94 @@ export class RuntimeRouter {
     } finally {
       span.end();
     }
+  }
+
+  /**
+   * Track runtime metrics
+   */
+  private async trackRuntimeMetrics(
+    runtime: string,
+    duration: number,
+    success: boolean,
+    context?: {
+      userId?: string;
+      organizationId?: string;
+      workspaceId?: string;
+      workflowId?: string;
+      nodeId?: string;
+      executionId?: string;
+    }
+  ): Promise<void> {
+    try {
+      // Update in-memory metrics
+      const metrics = this.runtimeMetrics.get(runtime) || {
+        count: 0,
+        totalDuration: 0,
+        successCount: 0,
+        errorCount: 0,
+        lastUsed: new Date(),
+      };
+
+      metrics.count++;
+      metrics.totalDuration += duration;
+      if (success) {
+        metrics.successCount++;
+      } else {
+        metrics.errorCount++;
+      }
+      metrics.lastUsed = new Date();
+
+      this.runtimeMetrics.set(runtime, metrics);
+
+      // Log to database if context is provided
+      if (context && (context.userId || context.workspaceId)) {
+        try {
+          await db.insert(codeExecLogs).values({
+            id: createId(),
+            runtime,
+            language: 'unknown', // Could be passed from config
+            duration,
+            success,
+            userId: context.userId || null,
+            organizationId: context.organizationId || null,
+            workspaceId: context.workspaceId || null,
+            workflowId: context.workflowId || null,
+            nodeId: context.nodeId || null,
+            executionId: context.executionId || null,
+            createdAt: new Date(),
+          });
+        } catch (dbError: any) {
+          // Log but don't throw - metrics tracking should not break execution
+          console.warn('[RuntimeRouter] Failed to log runtime metrics to database:', dbError.message);
+        }
+      }
+    } catch (error: any) {
+      // Silently fail - metrics tracking should not break execution
+      console.warn('[RuntimeRouter] Failed to track runtime metrics:', error.message);
+    }
+  }
+
+  /**
+   * Get runtime metrics
+   */
+  getRuntimeMetrics(): Record<string, {
+    count: number;
+    avgDuration: number;
+    successRate: number;
+    lastUsed: Date;
+  }> {
+    const metrics: Record<string, any> = {};
+    
+    for (const [runtime, data] of this.runtimeMetrics.entries()) {
+      metrics[runtime] = {
+        count: data.count,
+        avgDuration: data.count > 0 ? data.totalDuration / data.count : 0,
+        successRate: data.count > 0 ? data.successCount / data.count : 0,
+        lastUsed: data.lastUsed,
+      };
+    }
+    
+    return metrics;
   }
 
   /**
