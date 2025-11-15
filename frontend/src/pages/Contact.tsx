@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import api from '../lib/api';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -17,28 +18,20 @@ export default function Contact() {
     setError(null);
     
     try {
-      const response = await fetch('/api/v1/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await api.post('/contact', formData);
       
-      const data = await response.json();
-      
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         setSubmitted(true);
         setFormData({ name: '', email: '', subject: '', message: '' });
         setTimeout(() => {
           setSubmitted(false);
         }, 5000);
       } else {
-        setError(data.error || 'Something went wrong. Please try again.');
+        setError(response.data?.error || 'Something went wrong. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting contact form:', error);
-      setError('Something went wrong. Please try again.');
+      setError(error.response?.data?.error || 'Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
     }

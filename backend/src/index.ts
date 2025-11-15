@@ -38,7 +38,6 @@ import contactRouter from './routes/contact';
 import codeAgentsRouter from './routes/codeAgents';
 import codeExecLogsRouter from './routes/codeExecLogs';
 import policiesRouter from './routes/policies';
-import auditLogsRouter from './routes/auditLogs';
 import { scheduler } from './services/scheduler';
 import { permissionService } from './services/permissionService';
 import { websocketService } from './services/websocketService';

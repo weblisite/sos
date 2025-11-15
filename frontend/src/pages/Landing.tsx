@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import api from '../lib/api';
 
 // Temporarily disabled dot shader due to React Three Fiber compatibility issues
 // const DotScreenShader = lazy(() => 
@@ -13,25 +14,17 @@ export default function Landing() {
   const handleEarlyAccess = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/v1/early-access', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
+      const response = await api.post('/early-access', { email });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert(data.message || 'Thank you for your interest! We\'ll be in touch soon.');
+      if (response.status === 200 || response.status === 201) {
+        alert(response.data?.message || 'Thank you for your interest! We\'ll be in touch soon.');
         setEmail('');
       } else {
-        alert(data.error || 'Something went wrong. Please try again.');
+        alert(response.data?.error || 'Something went wrong. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting early access:', error);
-      alert('Something went wrong. Please try again.');
+      alert(error.response?.data?.error || 'Something went wrong. Please try again.');
     }
   };
 
