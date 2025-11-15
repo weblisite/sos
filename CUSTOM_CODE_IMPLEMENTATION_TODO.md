@@ -93,11 +93,11 @@
 - [x] **3.1.10** Add route `/dashboard/sandbox` or `/dashboard/code-agents`
 
 ### 3.2 Code Agent Management UI
-- [ ] **3.2.1** Create code agents list page
-- [ ] **3.2.2** Add search and filter functionality
-- [ ] **3.2.3** Add version history viewer
-- [ ] **3.2.4** Add usage statistics display
-- [ ] **3.2.5** Add publish/unpublish functionality
+- [x] **3.2.1** Create code agents list page
+- [x] **3.2.2** Add search and filter functionality
+- [x] **3.2.3** Add version history viewer
+- [x] **3.2.4** Add usage statistics display
+- [x] **3.2.5** Add publish/unpublish functionality
 
 ---
 
@@ -116,7 +116,7 @@
 - [x] **4.2.2** Register code execution tool in agent tool registry
 - [x] **4.2.3** Update agent executor to use code execution tool
 - [ ] **4.2.4** Test agent writing and executing code
-- [ ] **4.2.5** Add code execution tool to agent tool selection UI
+- [x] **4.2.5** Add code execution tool to agent tool selection UI
 
 ---
 
@@ -140,16 +140,16 @@
 ## Phase 6: Observability & Analytics (Weeks 11-12)
 
 ### 6.1 Enhanced Observability
-- [ ] **6.1.1** Add runtime tags to OpenTelemetry spans
-- [ ] **6.1.2** Add memory usage tracking
-- [ ] **6.1.3** Add token usage tracking for AI-assisted code
+- [x] **6.1.1** Add runtime tags to OpenTelemetry spans
+- [x] **6.1.2** Add memory usage tracking
+- [x] **6.1.3** Add token usage tracking for AI-assisted code
 - [x] **6.1.4** Create `code_exec_logs` table migration
-- [ ] **6.1.5** Log all code executions to database (partially done via runtimeRouter)
+- [x] **6.1.5** Log all code executions to database (partially done via runtimeRouter)
 - [ ] **6.1.6** Add code execution metrics to dashboard
 
 ### 6.2 Analytics & Reporting
-- [ ] **6.2.1** Add PostHog events for code tool usage
-- [ ] **6.2.2** Create code agent usage analytics page
+- [x] **6.2.1** Add PostHog events for code tool usage
+- [x] **6.2.2** Create code agent usage analytics page
 - [ ] **6.2.3** Add registry reuse rate tracking
 - [ ] **6.2.4** Add validation failure rate tracking
 - [ ] **6.2.5** Add latency metrics dashboard
