@@ -4,6 +4,8 @@ import axios from 'axios';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { undetectedChromeDriverBridge } from './undetectedChromeDriverBridge';
 import { cloudscraperBridge } from './cloudscraperBridge';
+import { browserbaseService } from './browserbaseService';
+import { stagehandService } from './stagehandService';
 
 /**
  * Browser Switch Service
@@ -97,6 +99,31 @@ export class BrowserSwitchService {
           0.9,
           taskConfig
         );
+      }
+
+      // 3.5. Massive browser scale → Browserbase
+      if (!decision && taskConfig.massiveBrowserScale) {
+        if (browserbaseService) {
+          decision = this.createDecision(
+            'browserbase' as BrowserEngine,
+            'Massive browser scale required, using Browserbase cloud instances',
+            0.95,
+            taskConfig
+          );
+        }
+      }
+
+      // 3.6. AI-powered automation → Stagehand
+      if (!decision && taskConfig.autonomousWebExploration) {
+        const hasStagehand = await this.checkStagehandAvailable();
+        if (hasStagehand) {
+          decision = this.createDecision(
+            'stagehand' as BrowserEngine,
+            'Autonomous web exploration, using Stagehand AI automation',
+            0.9,
+            taskConfig
+          );
+        }
       }
 
       // 4. Autonomous web exploration → AI Browser Agent (uses Playwright)

@@ -181,9 +181,10 @@ except Exception as e:
       try {
         const result = JSON.parse(pythonResult.stdout);
 
+        const stepsCount = result.steps ? result.steps.length : 0;
         span.setAttributes({
           'stagehand.success': result.success || false,
-          'stagehand.steps_count': len(result.get('steps', [])) || 0,
+          'stagehand.steps_count': stepsCount,
         });
 
         if (result.success) {
@@ -197,7 +198,7 @@ except Exception as e:
             screenshot: result.screenshot,
             metadata: {
               executionTime,
-              stepsCount: len(result.get('steps', [])) || 0,
+              stepsCount: result.steps ? result.steps.length : 0,
             },
           };
         } else {
