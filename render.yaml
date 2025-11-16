@@ -4,10 +4,10 @@ services:
     name: sos-backend
     env: node
     region: oregon
-    plan: starter
+    plan: standard  # Upgraded plan with more CPU and space
     # No rootDir - build from root to use root package-lock.json
-    # Using npm ci for faster, deterministic builds (with all dependencies needed for build)
-    buildCommand: npm ci && cd backend && npm run build
+    # Using npm install instead of npm ci for faster builds (npm ci can be very slow with workspaces)
+    buildCommand: npm install && cd backend && npm run build
     startCommand: cd backend && npm start
     healthCheckPath: /health
     # Build filters: Only deploy when backend/shared code changes (monorepo optimization)
@@ -129,7 +129,7 @@ services:
   - type: redis
     name: sos-redis
     region: oregon
-    plan: starter
+    plan: standard  # Upgraded plan
     maxmemoryPolicy: allkeys-lru
 
 # Note: We're using Supabase for PostgreSQL, but you can add a Render DB here as backup
