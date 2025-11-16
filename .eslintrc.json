@@ -1,0 +1,45 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-console": "off"
+  },
+  "overrides": [
+    {
+      "files": ["frontend/**/*.{ts,tsx}"],
+      "env": {
+        "browser": true,
+        "es2020": true
+      },
+      "extends": [
+        "plugin:react-hooks/recommended"
+      ],
+      "plugins": ["react-refresh"],
+      "rules": {
+        "react-refresh/only-export-components": [
+          "warn",
+          { "allowConstantExport": true }
+        ]
+      }
+    },
+    {
+      "files": ["backend/**/*.ts"],
+      "env": {
+        "node": true,
+        "es2022": true
+      }
+    }
+  ]
+}
+
