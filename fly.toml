@@ -5,8 +5,8 @@ app = "sos-hs5xqw"
 primary_region = "iad"  # Washington, D.C. - change to your preferred region
 
 [build]
-  builder = "dockerfile"
   dockerfile = "Dockerfile"
+  ignorefile = ".flyignore"
 
 [env]
   NODE_ENV = "production"
@@ -20,6 +20,7 @@ primary_region = "iad"  # Washington, D.C. - change to your preferred region
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
+  processes = ["app"]
 
   [[http_service.checks]]
     grace_period = "10s"
