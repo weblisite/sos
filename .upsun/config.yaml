@@ -8,6 +8,15 @@ applications:
       build: |
         # Ensure dev dependencies are installed (Upsun may only install production deps)
         npm install --legacy-peer-deps --no-audit --no-fund
+        # Add node_modules/.bin to PATH so tsc, vite, etc. are available
+        export PATH="$(pwd)/node_modules/.bin:$PATH"
+        # Verify tsc is available
+        if ! command -v tsc &> /dev/null; then
+          echo "ERROR: TypeScript (tsc) not found in PATH"
+          echo "PATH: $PATH"
+          ls -la node_modules/.bin/tsc || echo "tsc not in node_modules/.bin"
+          exit 1
+        fi
         npm run build
     web:
       commands:
