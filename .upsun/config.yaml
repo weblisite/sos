@@ -36,7 +36,7 @@ applications:
         STACKSTORM_ENABLED: "false"
         NANGO_HOST: https://api.nango.dev
     relationships:
-      redis: redis:redis
+      redis: redis:valkey
 
 services:
   redis:
