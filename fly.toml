@@ -5,6 +5,7 @@ app = "sos-hs5xqw"
 primary_region = "iad"  # Washington, D.C. - change to your preferred region
 
 [build]
+  builder = "dockerfile"
   dockerfile = "Dockerfile"
 
 [env]
