@@ -8,7 +8,7 @@ applications:
       build: |
         # Ensure dev dependencies are installed (Upsun may only install production deps)
         npm install --legacy-peer-deps --no-audit --no-fund
-        # Add node_modules/.bin to PATH so tsc, vite, etc. are available
+        # Add node_modules/.bin to PATH and run build in same shell
         export PATH="$(pwd)/node_modules/.bin:$PATH"
         # Verify tsc is available
         if ! command -v tsc &> /dev/null; then
@@ -17,7 +17,8 @@ applications:
           ls -la node_modules/.bin/tsc || echo "tsc not in node_modules/.bin"
           exit 1
         fi
-        npm run build
+        # Run build with PATH set
+        PATH="$(pwd)/node_modules/.bin:$PATH" npm run build
     web:
       commands:
         start: npm start
