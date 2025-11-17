@@ -10,7 +10,7 @@
     "dev:frontend": "vite --config vite.config.ts",
     "dev:backend": "cd backend && tsx watch src/index.ts",
     "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
-    "build:shared": "cd shared && tsc",
+    "build:shared": "cd shared && tsc --project tsconfig.json",
     "build:backend": "tsc -p tsconfig.backend.json",
     "build:frontend": "tsc -p tsconfig.frontend.json && vite build --config vite.config.ts && cd backend && mkdir -p public && cp -r ../frontend/dist/* public/",
     "start": "cd backend && node dist/index.js",
@@ -61,6 +61,7 @@
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "@rudderstack/rudder-sdk-node": "^2.1.10",
+    "@sos/shared": "file:shared",
     "@supabase/supabase-js": "^2.81.1",
     "@tanstack/react-query": "^5.90.7",
     "ajv": "^8.17.1",
@@ -96,13 +97,13 @@
     "playwright": "^1.56.1",
     "postgres": "^3.4.3",
     "puppeteer": "^21.11.0",
-    "redis": "^5.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",
     "react-router-dom": "^6.21.1",
     "reactflow": "^11.10.1",
     "recharts": "^3.4.1",
+    "redis": "^5.9.0",
     "sharp": "^0.34.5",
     "socket.io": "^4.6.1",
     "socket.io-client": "^4.6.1",
@@ -151,5 +152,14 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
-  }
+  },
+  "workspaces": [
+    "shared"
+  ],
+  "files": [
+    "shared/package.json",
+    "shared/tsconfig.json",
+    "shared/dist",
+    "shared/src"
+  ]
 }
