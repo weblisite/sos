@@ -8,6 +8,9 @@ applications:
       root: "."
     build:
       flavor: none
+      commands:
+        - npm ci --legacy-peer-deps --no-audit --no-fund
+        - npm run build
     web:
       commands:
         start: npm start
