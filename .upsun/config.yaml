@@ -1,0 +1,69 @@
+# Upsun Configuration for SynthralOS Automation Platform
+# Documentation: https://docs.upsun.com/
+
+applications:
+  backend:
+    type: nodejs:20
+    source:
+      root: "."
+    build:
+      flavor: none
+    web:
+      commands:
+        start: npm start
+      upstream:
+        socket_family: tcp
+        protocol: http
+      locations:
+        "/":
+          passthru: true
+        "/api":
+          passthru: true
+        "/health":
+          passthru: true
+    variables:
+      env:
+        NODE_ENV: production
+        PORT: "4000"
+        HOST: "0.0.0.0"
+        VITE_API_URL: ""
+        CORS_ORIGIN: ""
+        OTEL_ENABLED: "false"
+        OTEL_SERVICE_NAME: sos-backend
+        OTEL_SERVICE_VERSION: "1.0.0"
+        POSTHOG_HOST: https://app.posthog.com
+        RUDDERSTACK_DATA_PLANE_URL: https://hosted.rudderlabs.com
+        STACKSTORM_ENABLED: "false"
+        NANGO_HOST: https://api.nango.dev
+    relationships:
+      redis: redis:redis
+    disk: 1024
+
+services:
+  redis:
+    type: redis:7
+    disk: 256
+
+routes:
+  "https://{default}/":
+    type: upstream
+    upstream: backend:http
+
+# Environment variables that need to be set in Upsun dashboard:
+# - DATABASE_URL (Supabase PostgreSQL connection string)
+# - CLERK_SECRET_KEY
+# - CLERK_PUBLISHABLE_KEY
+# - OPENAI_API_KEY
+# - ANTHROPIC_API_KEY
+# - RESEND_API_KEY
+# - NANGO_SECRET_KEY
+# - SUPABASE_URL
+# - SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_ROLE_KEY
+# - OTEL_EXPORTER_OTLP_ENDPOINT (if using OpenTelemetry)
+# - POSTHOG_API_KEY (if using PostHog)
+# - RUDDERSTACK_WRITE_KEY (if using RudderStack)
+# - STACKSTORM_API_URL (if using StackStorm)
+# - STACKSTORM_API_KEY (if using StackStorm)
+# - JWT_SECRET (auto-generated if not set)
+
