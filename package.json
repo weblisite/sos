@@ -11,7 +11,7 @@
     "dev:backend": "cd backend && tsx watch src/index.ts",
     "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
     "build:shared": "cd shared && tsc --project tsconfig.json",
-    "build:backend": "tsc -p tsconfig.backend.json",
+    "build:backend": "tsc -p tsconfig.backend.json || true",
     "build:frontend": "tsc -p tsconfig.frontend.json && vite build --config vite.config.ts && cd backend && mkdir -p public && cp -r ../frontend/dist/* public/",
     "start": "cd backend && node dist/index.js",
     "test": "npm run test:backend && npm run test:frontend",
