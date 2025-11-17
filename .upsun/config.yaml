@@ -6,7 +6,7 @@ applications:
     type: nodejs:20
     hooks:
       build: |
-        npm ci --legacy-peer-deps --no-audit --no-fund
+        npm ci --legacy-peer-deps --no-audit --no-fund --include=dev
         npm run build
     web:
       commands:
