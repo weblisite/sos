@@ -20,6 +20,21 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Verify backend/dist/index.js exists
+RUN if [ ! -f backend/dist/index.js ]; then \
+      echo "ERROR: backend/dist/index.js not found!"; \
+      echo "Contents of backend/:"; \
+      ls -la backend/ || true; \
+      echo "Contents of backend/dist/:"; \
+      ls -la backend/dist/ || true; \
+      echo "Checking if backend/dist exists:"; \
+      test -d backend/dist && echo "backend/dist exists" || echo "backend/dist does NOT exist"; \
+      exit 1; \
+    else \
+      echo "✓ backend/dist/index.js found"; \
+      ls -lh backend/dist/index.js; \
+    fi
+
 # Production stage
 FROM node:20-alpine
 
