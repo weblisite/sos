@@ -1,8 +1,7 @@
 name: Deploy to Railway
 
 on:
-  # Disabled - using Railway's GitHub integration instead
-  # Railway will auto-deploy on push to main via dashboard connection
+  # Disabled - using Render instead
   # push:
   #   branches:
   #     - main

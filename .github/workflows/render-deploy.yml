@@ -1,11 +1,10 @@
 name: Deploy to Render
 
 on:
-  # Disabled - using Railway instead
-  # push:
-  #   branches:
-  #     - main
-  workflow_dispatch:  # Can still be triggered manually if needed
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
