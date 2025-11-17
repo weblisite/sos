@@ -63,7 +63,7 @@ const io = new Server(httpServer, {
 // Initialize WebSocket service
 websocketService.initialize(io);
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 
 // Middleware
 app.use(helmet());
