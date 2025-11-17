@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "buildCommand": "npm ci --legacy-peer-deps && npm run build",
+  "outputDirectory": "backend/public",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "backend/dist/index.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  }
+}
+

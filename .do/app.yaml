@@ -1,0 +1,54 @@
+name: sos-automation-platform
+region: nyc
+
+services:
+  - name: sos-backend
+    github:
+      repo: SynthralOS/SynthralOS-core
+      branch: main
+      deploy_on_push: true
+    
+    build_command: npm ci --legacy-peer-deps --no-audit --no-fund && npm run build
+    run_command: npm start
+    
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    
+    http_port: 4000
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: VITE_API_URL
+        value: ""
+      - key: CORS_ORIGIN
+        value: ""
+      - key: OTEL_ENABLED
+        value: "false"
+      - key: OTEL_SERVICE_NAME
+        value: sos-backend
+      - key: OTEL_SERVICE_VERSION
+        value: "1.0.0"
+      - key: STACKSTORM_ENABLED
+        value: "false"
+      - key: NANGO_HOST
+        value: https://api.nango.dev
+      - key: POSTHOG_HOST
+        value: https://app.posthog.com
+      - key: RUDDERSTACK_DATA_PLANE_URL
+        value: https://hosted.rudderlabs.com
+      # Note: Set these in DigitalOcean dashboard:
+      # DATABASE_URL, REDIS_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY,
+      # OPENAI_API_KEY, ANTHROPIC_API_KEY, RESEND_API_KEY, NANGO_SECRET_KEY,
+      # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET
+
