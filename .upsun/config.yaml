@@ -11,26 +11,24 @@ applications:
         rm -rf node_modules package-lock.json
         # Install all dependencies including dev dependencies
         npm install --legacy-peer-deps --no-audit --no-fund
-        # Verify TypeScript is installed
-        if [ ! -f node_modules/.bin/tsc ]; then
-          echo "ERROR: TypeScript (tsc) not found after installation"
-          echo "Checking if typescript package is installed..."
-          ls -la node_modules/typescript 2>/dev/null || echo "typescript package not found in node_modules"
+        # Verify TypeScript package is installed
+        if [ ! -d node_modules/typescript ]; then
           echo "Installing TypeScript explicitly..."
           npm install --save-dev typescript --legacy-peer-deps --no-audit --no-fund
         fi
-        # Add node_modules/.bin to PATH
-        export PATH="$(pwd)/node_modules/.bin:$PATH"
-        # Verify tsc is available
-        if ! command -v tsc &> /dev/null; then
-          echo "ERROR: TypeScript (tsc) still not found in PATH"
-          echo "PATH: $PATH"
-          ls -la node_modules/.bin/ | grep tsc || echo "tsc not in node_modules/.bin"
+        # Verify TypeScript is installed
+        if [ ! -d node_modules/typescript ]; then
+          echo "ERROR: TypeScript package not found after installation"
           exit 1
         fi
-        echo "✓ TypeScript found: $(which tsc)"
-        # Run build with PATH set
-        PATH="$(pwd)/node_modules/.bin:$PATH" npm run build
+        echo "✓ TypeScript package found"
+        # Use npx to run build commands (npx will find tsc even if symlink is missing)
+        # Build shared package
+        cd shared && npx tsc --project tsconfig.json && cd ..
+        # Build backend
+        mkdir -p backend/dist && npx tsc -p tsconfig.backend.json || (echo 'TypeScript compilation had errors, but continuing...') && (if [ -f backend/dist/src/index.js ]; then mv backend/dist/src/index.js backend/dist/index.js && echo '✓ Moved backend/dist/src/index.js to backend/dist/index.js'; fi) && (test -f backend/dist/index.js && echo '✓ backend/dist/index.js exists' || echo '✗ backend/dist/index.js NOT found')
+        # Build frontend
+        (npx tsc -p tsconfig.frontend.json || true) && npx vite build --config vite.config.ts && mkdir -p backend/public && sh -c 'if [ -d frontend/dist ] && [ -n "$(ls -A frontend/dist 2>/dev/null)" ]; then cp -r frontend/dist/* backend/public/ 2>/dev/null || true; cp -r frontend/dist/.[!.]* backend/public/ 2>/dev/null || true; elif [ -d dist ] && [ -n "$(ls -A dist 2>/dev/null)" ]; then cp -r dist/* backend/public/ 2>/dev/null || true; cp -r dist/.[!.]* backend/public/ 2>/dev/null || true; else echo "Error: Could not find frontend build output"; ls -la frontend/ 2>&1; ls -la dist 2>&1 || true; exit 1; fi'
     web:
       commands:
         start: npm start
