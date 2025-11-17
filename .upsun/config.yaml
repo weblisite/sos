@@ -7,10 +7,8 @@ applications:
     source:
       root: "."
     build:
-      flavor: none
-      commands:
-        - npm ci --legacy-peer-deps --no-audit --no-fund
-        - npm run build
+      - npm ci --legacy-peer-deps --no-audit --no-fund
+      - npm run build
     web:
       commands:
         start: npm start
@@ -40,12 +38,10 @@ applications:
         NANGO_HOST: https://api.nango.dev
     relationships:
       redis: redis:redis
-    disk: 1024
 
 services:
   redis:
-    type: redis:7
-    disk: 256
+    type: valkey:7
 
 routes:
   "https://{default}/":
