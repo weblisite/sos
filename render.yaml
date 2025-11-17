@@ -1,13 +1,13 @@
 services:
   # Backend API Service (serves both API and frontend)
+  # Using Docker to match local environment exactly
   - type: web
     name: sos-backend
-    env: node
+    env: docker
     region: oregon
     plan: standard  # Upgraded plan with more CPU and space
-    # Single package.json at root - all config files at root
-    buildCommand: npm ci --legacy-peer-deps --no-audit --no-fund && npm run build
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /health
     # Build filters: Only deploy when backend/shared code changes (monorepo optimization)
     buildFilter:
