@@ -7,8 +7,9 @@ applications:
     source:
       root: "."
     build:
-      - npm ci --legacy-peer-deps --no-audit --no-fund
-      - npm run build
+      commands:
+        - npm ci --legacy-peer-deps --no-audit --no-fund
+        - npm run build
     web:
       commands:
         start: npm start
@@ -41,7 +42,7 @@ applications:
 
 services:
   redis:
-    type: valkey:7
+    type: valkey-persistent:8.0
 
 routes:
   "https://{default}/":
