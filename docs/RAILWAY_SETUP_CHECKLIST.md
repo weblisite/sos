@@ -53,9 +53,8 @@ Go to your service → **Variables** tab and add:
 
 ### Step 6: Test Deployment
 - [ ] Push to `main` branch
-- [ ] Check GitHub Actions - workflow should run
-- [ ] Check Railway dashboard - deployment should start
-- [ ] Monitor build logs
+- [ ] Check Railway dashboard - deployment should start automatically
+- [ ] Monitor build logs in Railway dashboard
 - [ ] Verify deployment completes successfully
 
 ### Step 7: Verify Application
