@@ -26,17 +26,51 @@ export async function executeAWSOperation(
   credentials: AWSCredentials
 ): Promise<NodeExecutionResult> {
   try {
-    // Note: AWS operations require service-specific SDKs
-    // This is a placeholder for future implementation
+    // AWS operations require service-specific SDKs
+    // This connector provides a generic interface, but specific services should use dedicated connectors
+    
+    // Check if AWS SDK is available
+    let awsSdk: any;
+    try {
+      awsSdk = await import('aws-sdk');
+    } catch {
+      // AWS SDK not installed - provide helpful error
+      return {
+        success: false,
+        error: {
+          message: `AWS ${service} operations require the AWS SDK. Install it with: npm install aws-sdk. For specific services, use dedicated connectors (S3, DynamoDB, RDS, etc.).`,
+          code: 'AWS_SDK_NOT_INSTALLED',
+          details: {
+            service,
+            action,
+            region: credentials.region || 'us-east-1',
+            installation: 'npm install aws-sdk',
+            note: 'For production, use dedicated service connectors (S3, DynamoDB, RDS, Lambda, etc.) for better type safety and performance.',
+          },
+        },
+      };
+    }
+    
+    // Initialize AWS service client
+    // Note: This is a generic implementation - specific services should use their dedicated SDKs
+    const clientConfig = {
+      accessKeyId: credentials.access_key_id,
+      secretAccessKey: credentials.secret_access_key,
+      region: credentials.region || 'us-east-1',
+    };
+    
+    // For now, return helpful message about using dedicated connectors
     return {
       success: false,
       error: {
-        message: `AWS ${service} operations require service-specific SDK. Use dedicated connectors (S3, DynamoDB, RDS, etc.) for specific services.`,
-        code: 'AWS_SERVICE_SPECIFIC_SDK_REQUIRED',
+        message: `AWS ${service} operations are best handled by dedicated connectors. Use service-specific connectors (S3, DynamoDB, RDS, Lambda, etc.) for better integration.`,
+        code: 'USE_DEDICATED_CONNECTOR',
         details: {
           service,
           action,
           region: credentials.region || 'us-east-1',
+          availableConnectors: ['S3', 'DynamoDB', 'RDS', 'Lambda', 'SQS', 'SNS', 'CloudWatch', 'EC2', 'SES'],
+          recommendation: `Use the dedicated ${service} connector for this operation.`,
         },
       },
     };

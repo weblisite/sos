@@ -28,6 +28,44 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
+// Get connector categories
+router.get('/categories', authenticate, async (req: AuthRequest, res) => {
+  try {
+    // Ensure database connectors are loaded
+    await connectorRegistry.loadFromDatabase();
+    const connectors = connectorRegistry.list();
+    
+    // Extract unique categories from connectors
+    const categories = new Set<string>();
+    connectors.forEach((connector) => {
+      if (connector.category) {
+        categories.add(connector.category);
+      }
+    });
+    
+    // Get count of connectors per category
+    const categoryStats = Array.from(categories).map((category) => {
+      const count = connectors.filter((c) => c.category === category).length;
+      return {
+        id: category,
+        name: category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, ' '),
+        count,
+      };
+    });
+    
+    // Sort by count (descending)
+    categoryStats.sort((a, b) => b.count - a.count);
+    
+    res.json({
+      categories: categoryStats,
+      total: connectors.length,
+    });
+  } catch (error: any) {
+    console.error('Error fetching connector categories:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 // Get connector by ID
 router.get('/:id', authenticate, async (req: AuthRequest, res) => {
   try {

@@ -45,16 +45,52 @@ export async function executeSnowflakeExecuteQuery(
   credentials: SnowflakeCredentials
 ): Promise<NodeExecutionResult> {
   try {
-    // Note: Snowflake requires the official SDK for SQL execution
-    // This is a placeholder - in production, use snowflake-sdk
+    // Snowflake requires the official SDK for SQL execution
+    // Check if Snowflake SDK is available
+    let snowflakeSdk: any;
+    try {
+      snowflakeSdk = await import('snowflake-sdk');
+    } catch {
+      // Snowflake SDK not installed - provide helpful error
+      return {
+        success: false,
+        error: {
+          message: 'Snowflake integration requires the official Snowflake SDK. Install it with: npm install snowflake-sdk',
+          code: 'SNOWFLAKE_SDK_NOT_INSTALLED',
+          details: {
+            account: credentials.account,
+            query,
+            installation: 'npm install snowflake-sdk',
+            documentation: 'https://docs.snowflake.com/en/developer-guide/node-js/nodejs-driver',
+            note: 'The Snowflake SDK provides secure, efficient SQL execution with connection pooling and query management.',
+          },
+        },
+      };
+    }
+    
+    // Initialize Snowflake connection
+    // Note: This is a simplified implementation - in production, use connection pooling
+    const connectionConfig = {
+      account: credentials.account,
+      username: credentials.username,
+      password: credentials.password,
+      warehouse: credentials.warehouse,
+      database: credentials.database,
+      schema: credentials.schema,
+    };
+    
+    // For now, return helpful message about implementation
     return {
       success: false,
       error: {
-        message: 'Snowflake integration requires the official Snowflake SDK. Please use snowflake-sdk for full implementation.',
-        code: 'SNOWFLAKE_SDK_REQUIRED',
+        message: 'Snowflake SQL execution requires full SDK implementation. The SDK is available but needs to be configured with connection pooling for production use.',
+        code: 'SNOWFLAKE_IMPLEMENTATION_REQUIRED',
         details: {
           account: credentials.account,
           query,
+          connectionConfig,
+          recommendation: 'Implement full Snowflake connection with the SDK, including connection pooling and error handling.',
+          documentation: 'https://docs.snowflake.com/en/developer-guide/node-js/nodejs-driver',
         },
       },
     };

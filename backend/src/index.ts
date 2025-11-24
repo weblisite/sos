@@ -146,13 +146,27 @@ io.on('connection', (socket) => {
   });
 });
 
-// Error handling middleware
+// Error handling middleware - standardized error format
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
-  res.status(500).json({
+  
+  // Standardized error response format
+  const errorResponse: {
+    error: string;
+    message?: string;
+    code?: string;
+    details?: unknown;
+  } = {
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
-  });
+  };
+  
+  if (process.env.NODE_ENV === 'development') {
+    errorResponse.message = err.message;
+    errorResponse.code = err.name;
+    errorResponse.details = { stack: err.stack };
+  }
+  
+  res.status(500).json(errorResponse);
 });
 
 // Serve static files from frontend dist directory (in production)

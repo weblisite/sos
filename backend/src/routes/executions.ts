@@ -211,9 +211,25 @@ router.get('/:id', authenticate, async (req: AuthRequest, res) => {
       logs = logs.slice(0, parseInt(limit as string, 10));
     }
 
+    // Ensure consistent response format matching frontend expectations
     res.json({
-      ...executionData,
-      logs,
+      id: executionData.id,
+      workflowId: executionData.workflowId,
+      status: executionData.status,
+      startedAt: executionData.startedAt,
+      finishedAt: executionData.finishedAt,
+      input: executionData.input,
+      output: executionData.output,
+      error: executionData.error,
+      metadata: executionData.metadata,
+      logs: logs.map((log) => ({
+        id: log.id,
+        nodeId: log.nodeId,
+        level: log.level,
+        message: log.message,
+        data: log.data,
+        timestamp: log.timestamp,
+      })),
     });
   } catch (error) {
     console.error('Error fetching execution:', error);

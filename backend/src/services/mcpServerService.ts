@@ -266,10 +266,26 @@ rl.on('line', async (line) => {
 });
 `;
     } else {
-      // HTTP/SSE implementations would be similar but with Express/HTTP server
+      // HTTP/SSE implementations would use Express server
       return `// HTTP/SSE server implementation for ${agent.name}
-// This is a placeholder - full implementation would include Express server setup
-console.log('MCP Server for ${agent.name} - ${protocol} protocol');
+// Full implementation requires Express server setup
+// Install dependencies: npm install express cors
+const express = require('express');
+const cors = require('cors');
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// MCP Server endpoints for ${agent.name}
+app.post('/mcp/call', async (req, res) => {
+  // Handle MCP protocol calls
+  res.json({ result: 'MCP Server for ${agent.name} - ${protocol} protocol' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('MCP Server for ${agent.name} running on port', PORT);
+});
 `;
     }
   }

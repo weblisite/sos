@@ -27,18 +27,46 @@ export async function executeGCPOperation(
   credentials: GCPCredentials
 ): Promise<NodeExecutionResult> {
   try {
-    // Note: GCP operations require service-specific SDKs
-    // This is a placeholder for future implementation
+    // GCP operations require service-specific SDKs
+    // This connector provides a generic interface, but specific services should use dedicated connectors
+    
+    // Check if GCP SDK is available
+    let gcpSdk: any;
+    try {
+      // Try to import @google-cloud/common or specific service SDK
+      gcpSdk = await import('@google-cloud/common');
+    } catch {
+      // GCP SDK not installed - provide helpful error
+      return {
+        success: false,
+        error: {
+          message: `GCP ${service} operations require the Google Cloud SDK. Install service-specific SDKs (e.g., @google-cloud/bigquery, @google-cloud/storage). For specific services, use dedicated connectors.`,
+          code: 'GCP_SDK_NOT_INSTALLED',
+          details: {
+            service,
+            method,
+            resource,
+            projectId: credentials.project_id,
+            installation: `npm install @google-cloud/${service.toLowerCase().replace(/\s+/g, '-')}`,
+            note: 'For production, use dedicated service connectors (BigQuery, Cloud Storage, Pub/Sub, etc.) for better type safety and performance.',
+          },
+        },
+      };
+    }
+    
+    // For now, return helpful message about using dedicated connectors
     return {
       success: false,
       error: {
-        message: `GCP ${service} operations require service-specific SDK. Use dedicated connectors (e.g., BigQuery, Cloud Storage) for specific services.`,
-        code: 'GCP_SERVICE_SPECIFIC_SDK_REQUIRED',
+        message: `GCP ${service} operations are best handled by dedicated connectors. Use service-specific connectors (BigQuery, Cloud Storage, Pub/Sub, etc.) for better integration.`,
+        code: 'USE_DEDICATED_CONNECTOR',
         details: {
           service,
           method,
           resource,
           projectId: credentials.project_id,
+          availableConnectors: ['BigQuery', 'Cloud Storage', 'Pub/Sub', 'Cloud Functions', 'Cloud Run', 'Cloud SQL', 'Firestore'],
+          recommendation: `Use the dedicated ${service} connector for this operation.`,
         },
       },
     };

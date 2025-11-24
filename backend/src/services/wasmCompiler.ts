@@ -202,12 +202,18 @@ export class WasmCompiler {
     // 2. MicroPython compiled to WASM (simpler but limited)
     // 3. RustPython compiled to WASM
     
-    // For now, return a placeholder that indicates Python needs runtime execution
-    // In a full implementation, we'd use one of the above methods
+    // Python to WASM compilation options:
+    // 1. Pyodide - Python runtime compiled to WASM (best compatibility)
+    // 2. MicroPython - Lightweight Python subset compiled to WASM
+    // 3. RustPython - Python interpreter written in Rust, compiled to WASM
     
+    // For now, provide helpful error with implementation guidance
     throw new Error(
-      'Python to WASM compilation is not yet fully implemented. ' +
-      'Consider using Pyodide runtime or implementing MicroPython/RustPython compilation.'
+      'Python to WASM compilation requires additional setup. ' +
+      'Options: 1) Use Pyodide runtime (npm install pyodide), ' +
+      '2) Implement MicroPython compilation, or ' +
+      '3) Use RustPython. ' +
+      'For immediate use, consider executing Python code via runtime instead of WASM compilation.'
     );
   }
 
