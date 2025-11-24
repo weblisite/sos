@@ -2023,7 +2023,7 @@ export const nodeRegistry: Record<string, NodeDefinition> = {
       properties: {
         condition: {
           type: 'string',
-          description: 'JavaScript condition expression',
+          description: 'JavaScript condition expression that returns a boolean. Use "input" to access the current input data. Example: "input.count < 10" or "input.status === \'active\'"',
           default: 'true',
           format: 'code',
         },

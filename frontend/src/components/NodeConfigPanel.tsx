@@ -298,8 +298,81 @@ export default function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: N
     }
   };
 
+  const handleFileUpload = async (file: File, key: string) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (key === 'imageBase64' || key === 'imageUrl') {
+          // Convert to base64 data URI
+          handleChange(key, result);
+        } else {
+          handleChange(key, result);
+        }
+        resolve();
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const renderInput = (key: string, property: any) => {
     const value = config[key] ?? property.default ?? '';
+    const nodeType = node?.data?.type as string;
+
+    // Special handling for image file uploads in image analysis nodes
+    if ((nodeType === 'ai.image_analyze' || nodeType === 'ai.ocr') && (key === 'imageUrl' || key === 'imageBase64')) {
+      return (
+        <div className="space-y-2">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleFileUpload(file, key).catch((error) => {
+                  console.error('Error uploading file:', error);
+                  alert('Failed to upload image', 'Upload Error', 'error');
+                });
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400"
+          />
+          {value && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Current value:</p>
+              {typeof value === 'string' && value.startsWith('data:image') ? (
+                <div className="space-y-1">
+                  <img src={value} alt="Preview" className="max-w-full h-32 object-contain rounded border border-gray-200 dark:border-gray-700" />
+                  <button
+                    onClick={() => handleChange(key, '')}
+                    className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                  >
+                    Remove image
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={String(value)}
+                  onChange={(e) => handleChange(key, e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  placeholder="Or enter image URL"
+                  className="w-full px-2 py-1 text-xs bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-gray-100"
+                />
+              )}
+            </div>
+          )}
+          {property.description && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">{property.description}</p>
+          )}
+        </div>
+      );
+    }
 
     // Special handling for hook fields (preIngestHook, postAnswerHook) and agent selection
     if (key === 'preIngestHook' || key === 'postAnswerHook' || key === 'selectedAgent') {
@@ -377,16 +450,37 @@ export default function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: N
             language = 'bash';
           }
           
+          // Special handling for while loop condition with documentation
+          const isWhileLoop = nodeType === 'logic.loop.while' && key === 'condition';
+          
           return (
             <div className="space-y-2">
-              <CodeEditor
-                language={language}
-                value={value as string || ''}
-                onChange={(val) => handleChange(key, val)}
-                height="300px"
-                placeholder={property.description}
-              />
-              {property.description && (
+              {isWhileLoop && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md mb-2">
+                  <p className="text-xs font-medium text-blue-900 dark:text-blue-200 mb-1">📖 While Loop Documentation</p>
+                  <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
+                    <p><strong>Condition Format:</strong> JavaScript expression that returns a boolean</p>
+                    <p><strong>Access Input:</strong> Use <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">input</code> to access current input data</p>
+                    <p><strong>Examples:</strong></p>
+                    <ul className="list-disc list-inside ml-2 space-y-0.5">
+                      <li><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">input.count &lt; 10</code></li>
+                      <li><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">input.status === 'active'</code></li>
+                      <li><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">input.items.length &gt; 0</code></li>
+                    </ul>
+                    <p className="mt-1"><strong>Note:</strong> The loop continues while the condition is true. Use maxIterations to prevent infinite loops.</p>
+                  </div>
+                </div>
+              )}
+              <div style={{ minHeight: '300px', position: 'relative', zIndex: 10 }}>
+                <CodeEditor
+                  language={language}
+                  value={value as string || ''}
+                  onChange={(val) => handleChange(key, val)}
+                  height="300px"
+                  placeholder={property.description}
+                />
+              </div>
+              {property.description && !isWhileLoop && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">{property.description}</p>
               )}
             </div>
@@ -495,6 +589,9 @@ export default function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: N
             <div className="space-y-2">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 Select tools the agent can use
+                <span className="block mt-1 text-gray-400 dark:text-gray-500 italic">
+                  Note: App integrations as tools coming soon - currently supports built-in tools only
+                </span>
               </div>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {availableTools.map((tool) => (

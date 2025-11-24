@@ -88,7 +88,7 @@ export function CodeEditor({
   };
 
   return (
-    <div className="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div className="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden" style={{ minHeight: height }}>
       <Editor
         height={height}
         language={language}
