@@ -608,51 +608,135 @@ export default function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: N
             brave: 'Search the web using Brave Search (requires API key)',
             execute_code: 'Write and execute custom code in JavaScript or Python',
           };
+
+          // Add connectors as tools (format: app:connectorId or app:connectorId:actionId)
+          const connectorTools = connectors
+            .filter((connector: any) => connector.actions && connector.actions.length > 0)
+            .flatMap((connector: any) => {
+              // Add connector as a tool (allows agent to use any action from this connector)
+              const connectorTool = {
+                id: `app:${connector.id}`,
+                name: connector.name,
+                description: `Use ${connector.name} integrations (all actions)`,
+                icon: connector.icon,
+                type: 'connector',
+              };
+              
+              // Also add individual actions as tools
+              const actionTools = connector.actions.map((action: any) => ({
+                id: `app:${connector.id}:${action.id}`,
+                name: `${connector.name}: ${action.name}`,
+                description: action.description || `Execute ${action.name} action from ${connector.name}`,
+                icon: connector.icon,
+                type: 'action',
+              }));
+              
+              return [connectorTool, ...actionTools];
+            });
           
           return (
             <div className="space-y-2">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 Select tools the agent can use
-                <span className="block mt-1 text-gray-400 dark:text-gray-500 italic">
-                  Note: To use app integrations as tools, register them via the backend API. Currently supports built-in tools only.
-                </span>
               </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {availableTools.map((tool) => (
-                  <label key={tool} className="flex items-start gap-2 cursor-pointer p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={selectedTools.includes(tool)}
-                      onChange={(e) => {
-                        const newTools = e.target.checked
-                          ? [...selectedTools, tool]
-                          : selectedTools.filter((t) => t !== tool);
-                        handleChange(key, newTools);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700 mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {toolLabels[tool] || tool}
-                        </span>
-                        {tool === 'execute_code' && (
-                          <span className="text-xs text-blue-600 dark:text-blue-400" title="Allows agent to write and execute custom code">
-                            ⚡
-                          </span>
-                        )}
-                      </div>
-                      {toolDescriptions[tool] && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {toolDescriptions[tool]}
-                        </p>
-                      )}
-                    </div>
-                  </label>
-                ))}
-              </div>
+              
+              {/* Built-in Tools */}
+              {availableTools.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Built-in Tools</div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {availableTools.map((tool) => (
+                      <label key={tool} className="flex items-start gap-2 cursor-pointer p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedTools.includes(tool)}
+                          onChange={(e) => {
+                            const newTools = e.target.checked
+                              ? [...selectedTools, tool]
+                              : selectedTools.filter((t) => t !== tool);
+                            handleChange(key, newTools);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700 mt-0.5"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {toolLabels[tool] || tool}
+                            </span>
+                            {tool === 'execute_code' && (
+                              <span className="text-xs text-blue-600 dark:text-blue-400" title="Allows agent to write and execute custom code">
+                                ⚡
+                              </span>
+                            )}
+                          </div>
+                          {toolDescriptions[tool] && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {toolDescriptions[tool]}
+                            </p>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* App Integrations as Tools */}
+              {connectorTools.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">App Integrations</div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {connectorTools.map((connectorTool: any) => (
+                      <label key={connectorTool.id} className="flex items-start gap-2 cursor-pointer p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedTools.includes(connectorTool.id)}
+                          onChange={(e) => {
+                            const newTools = e.target.checked
+                              ? [...selectedTools, connectorTool.id]
+                              : selectedTools.filter((t) => t !== connectorTool.id);
+                            handleChange(key, newTools);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700 mt-0.5"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {connectorTool.icon && (
+                              <img 
+                                src={connectorTool.icon} 
+                                alt={connectorTool.name}
+                                className="w-4 h-4 rounded"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {connectorTool.name}
+                            </span>
+                            {connectorTool.type === 'connector' && (
+                              <span className="text-xs text-blue-600 dark:text-blue-400" title="All actions from this app">
+                                📦
+                              </span>
+                            )}
+                          </div>
+                          {connectorTool.description && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {connectorTool.description}
+                            </p>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
@@ -1098,6 +1182,36 @@ export default function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: N
               const isRAGNode = nodeType === 'ai.rag';
               const isVectorStoreField = isRAGNode && (key === 'vectorStoreProvider' || key === 'indexName');
               const isLLMField = isRAGNode && (key === 'llmProvider' || key === 'model');
+              const isQueryField = isRAGNode && key === 'query';
+              
+              // Show RAG pipeline validation and tips
+              if (isRAGNode && key === 'vectorStoreProvider') {
+                return (
+                  <div key={key} className="mb-4">
+                    <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200 font-semibold mb-2">
+                        💡 RAG Pipeline Configuration Tips:
+                      </p>
+                      <ul className="list-disc list-inside text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                        <li>Ensure your selected <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">vectorStoreProvider</code> is configured in the backend (e.g., API keys for Pinecone/Weaviate, or a running Chroma/PostgreSQL instance).</li>
+                        <li>The <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">indexName</code> must exist in your vector store and contain relevant documents. Use the "Document Ingestion" node to populate it.</li>
+                        <li>Verify your LLM provider (e.g., OpenAI, Anthropic) has the necessary API keys configured in your environment variables.</li>
+                        <li>For testing, use <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">memory</code> provider. For production, use <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">database</code> or a dedicated vector store.</li>
+                      </ul>
+                    </div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {key}
+                      {nodeDef.config?.required?.includes(key) && (
+                        <span className="text-red-500 dark:text-red-400 ml-1">*</span>
+                      )}
+                    </label>
+                    {property.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{property.description}</p>
+                    )}
+                    {renderInput(key, property)}
+                  </div>
+                );
+              }
               
               return (
                 <div key={key}>
@@ -1110,14 +1224,14 @@ export default function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: N
                   {property.description && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{property.description}</p>
                   )}
-                  {isRAGNode && isVectorStoreField && !config.vectorStoreProvider && key === 'vectorStoreProvider' && (
-                    <div className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">
-                      💡 Tip: Use "database" provider for persistent storage, or "memory" for temporary testing
+                  {isRAGNode && isLLMField && !config.llmProvider && key === 'llmProvider' && (
+                    <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-800 dark:text-yellow-200">
+                      ⚠️ Warning: Ensure your LLM provider API key is configured in environment variables (OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.)
                     </div>
                   )}
-                  {isRAGNode && isLLMField && !config.llmProvider && key === 'llmProvider' && (
-                    <div className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">
-                      💡 Tip: Ensure your LLM provider API key is configured in environment variables
+                  {isRAGNode && isQueryField && !config.query && (
+                    <div className="mb-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-800 dark:text-red-200">
+                      ⚠️ Required: The query field must be provided at runtime (via input) or configured here
                     </div>
                   )}
                   {renderInput(key, property)}
