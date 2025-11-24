@@ -1,0 +1,1218 @@
+[
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/contact/",
+    "file": "routes/contact.ts",
+    "line": 20,
+    "fullLine": "router.post('/', async (req, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/policies/",
+    "file": "routes/policies.ts",
+    "line": 27,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:policySetId",
+    "fullPath": "/api/v1/policies/:policySetId",
+    "file": "routes/policies.ts",
+    "line": 50,
+    "fullLine": "router.get('/:policySetId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/policies/",
+    "file": "routes/policies.ts",
+    "line": 80,
+    "fullLine": "router.post('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:policySetId",
+    "fullPath": "/api/v1/policies/:policySetId",
+    "file": "routes/policies.ts",
+    "line": 146,
+    "fullLine": "router.put('/:policySetId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:policySetId",
+    "fullPath": "/api/v1/policies/:policySetId",
+    "file": "routes/policies.ts",
+    "line": 190,
+    "fullLine": "router.delete('/:policySetId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/evaluate",
+    "fullPath": "/api/v1/policies/evaluate",
+    "file": "routes/policies.ts",
+    "line": 222,
+    "fullLine": "router.post('/evaluate', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/workflows",
+    "fullPath": "/api/v1/analytics/workflows",
+    "file": "routes/analytics.ts",
+    "line": 22,
+    "fullLine": "router.get('/workflows', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/nodes",
+    "fullPath": "/api/v1/analytics/nodes",
+    "file": "routes/analytics.ts",
+    "line": 200,
+    "fullLine": "router.get('/nodes', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/costs",
+    "fullPath": "/api/v1/analytics/costs",
+    "file": "routes/analytics.ts",
+    "line": 308,
+    "fullLine": "router.get('/costs', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/errors",
+    "fullPath": "/api/v1/analytics/errors",
+    "file": "routes/analytics.ts",
+    "line": 420,
+    "fullLine": "router.get('/errors', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/usage",
+    "fullPath": "/api/v1/analytics/usage",
+    "file": "routes/analytics.ts",
+    "line": 539,
+    "fullLine": "router.get('/usage', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/agent/:agentId",
+    "fullPath": "/api/v1/code-exec-logs/agent/:agentId",
+    "file": "routes/codeExecLogs.ts",
+    "line": 12,
+    "fullLine": "router.get('/agent/:agentId', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/workflow/:executionId",
+    "fullPath": "/api/v1/code-exec-logs/workflow/:executionId",
+    "file": "routes/codeExecLogs.ts",
+    "line": 40,
+    "fullLine": "router.get('/workflow/:executionId', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/agent/:agentId/stats",
+    "fullPath": "/api/v1/code-exec-logs/agent/:agentId/stats",
+    "file": "routes/codeExecLogs.ts",
+    "line": 67,
+    "fullLine": "router.get('/agent/:agentId/stats', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/workflows/",
+    "file": "routes/workflows.ts",
+    "line": 25,
+    "fullLine": "router.get('/', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/workflows/:id",
+    "file": "routes/workflows.ts",
+    "line": 93,
+    "fullLine": "router.get('/:id', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/workflows/",
+    "file": "routes/workflows.ts",
+    "line": 160,
+    "fullLine": "router.post('/', authenticate, requirePermission({ resourceType: 'workflow', action: 'create' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/workflows/:id",
+    "file": "routes/workflows.ts",
+    "line": 241,
+    "fullLine": "router.put('/:id', authenticate, requirePermission({ resourceType: 'workflow', action: 'update' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/workflows/:id",
+    "file": "routes/workflows.ts",
+    "line": 336,
+    "fullLine": "router.delete('/:id', authenticate, requirePermission({ resourceType: 'workflow', action: 'delete' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/duplicate",
+    "fullPath": "/api/v1/workflows/:id/duplicate",
+    "file": "routes/workflows.ts",
+    "line": 373,
+    "fullLine": "router.post('/:id/duplicate', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/versions/:versionId/restore",
+    "fullPath": "/api/v1/workflows/:id/versions/:versionId/restore",
+    "file": "routes/workflows.ts",
+    "line": 444,
+    "fullLine": "router.post('/:id/versions/:versionId/restore', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/token/:token",
+    "fullPath": "/api/v1/invitations/token/:token",
+    "file": "routes/invitations.ts",
+    "line": 19,
+    "fullLine": "router.get('/token/:token', async (req, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/invitations/",
+    "file": "routes/invitations.ts",
+    "line": 36,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/accept",
+    "fullPath": "/api/v1/invitations/accept",
+    "file": "routes/invitations.ts",
+    "line": 88,
+    "fullLine": "router.post('/accept', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/stats/",
+    "file": "routes/stats.ts",
+    "line": 13,
+    "fullLine": "router.get('/', authenticate, cacheMiddleware({ ttl: 30, prefix: 'stats' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/trends",
+    "fullPath": "/api/v1/stats/trends",
+    "file": "routes/stats.ts",
+    "line": 174,
+    "fullLine": "router.get('/trends', authenticate, cacheMiddleware({ ttl: 60, prefix: 'stats-trends' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/chart",
+    "fullPath": "/api/v1/stats/chart",
+    "file": "routes/stats.ts",
+    "line": 360,
+    "fullLine": "router.get('/chart', authenticate, cacheMiddleware({ ttl: 60, prefix: 'stats-chart' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/scraping/events",
+    "fullPath": "/api/v1/stats/scraping/events",
+    "file": "routes/stats.ts",
+    "line": 428,
+    "fullLine": "router.get('/scraping/events', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/templates/",
+    "file": "routes/templates.ts",
+    "line": 272,
+    "fullLine": "router.get('/', setOrganization, cacheMiddleware({ ttl: 60, prefix: 'templates' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/templates/:id",
+    "file": "routes/templates.ts",
+    "line": 339,
+    "fullLine": "router.get('/:id', setOrganization, cacheMiddleware({ ttl: 60, prefix: 'templates' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/templates/",
+    "file": "routes/templates.ts",
+    "line": 396,
+    "fullLine": "router.post('/', setOrganization, requirePermission({ resourceType: 'template', action: 'create' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/templates/:id",
+    "file": "routes/templates.ts",
+    "line": 436,
+    "fullLine": "router.put('/:id', setOrganization, requirePermission({ resourceType: 'template', action: 'update' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/templates/:id",
+    "file": "routes/templates.ts",
+    "line": 490,
+    "fullLine": "router.delete('/:id', setOrganization, requirePermission({ resourceType: 'template', action: 'delete' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/use",
+    "fullPath": "/api/v1/templates/:id/use",
+    "file": "routes/templates.ts",
+    "line": 531,
+    "fullLine": "router.post('/:id/use', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/audit-logs/",
+    "file": "routes/auditLogs.ts",
+    "line": 92,
+    "fullLine": "router.get('/', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/export/csv",
+    "fullPath": "/api/v1/audit-logs/export/csv",
+    "file": "routes/auditLogs.ts",
+    "line": 258,
+    "fullLine": "router.get('/export/csv', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/audit-logs/:id",
+    "file": "routes/auditLogs.ts",
+    "line": 401,
+    "fullLine": "router.get('/:id', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/retention/stats",
+    "fullPath": "/api/v1/audit-logs/retention/stats",
+    "file": "routes/auditLogs.ts",
+    "line": 446,
+    "fullLine": "router.get('/retention/stats', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/retention/cleanup/dry-run",
+    "fullPath": "/api/v1/audit-logs/retention/cleanup/dry-run",
+    "file": "routes/auditLogs.ts",
+    "line": 462,
+    "fullLine": "router.post('/retention/cleanup/dry-run', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/retention/cleanup",
+    "fullPath": "/api/v1/audit-logs/retention/cleanup",
+    "file": "routes/auditLogs.ts",
+    "line": 487,
+    "fullLine": "router.post('/retention/cleanup', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/frameworks",
+    "fullPath": "/api/v1/agents/frameworks",
+    "file": "routes/agents.ts",
+    "line": 21,
+    "fullLine": "router.get('/frameworks', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/execute",
+    "fullPath": "/api/v1/agents/execute",
+    "file": "routes/agents.ts",
+    "line": 40,
+    "fullLine": "router.post('/execute', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/frameworks/:name",
+    "fullPath": "/api/v1/agents/frameworks/:name",
+    "file": "routes/agents.ts",
+    "line": 136,
+    "fullLine": "router.get('/frameworks/:name', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/frameworks/search",
+    "fullPath": "/api/v1/agents/frameworks/search",
+    "file": "routes/agents.ts",
+    "line": 162,
+    "fullLine": "router.get('/frameworks/search', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/monitoring/performance/",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 19,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/system",
+    "fullPath": "/api/v1/monitoring/performance/system",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 38,
+    "fullLine": "router.get('/system', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/endpoint/:method/:endpoint(*)",
+    "fullPath": "/api/v1/monitoring/performance/endpoint/:method/:endpoint(*)",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 66,
+    "fullLine": "router.get('/endpoint/:method/:endpoint(*)', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/slowest",
+    "fullPath": "/api/v1/monitoring/performance/slowest",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 92,
+    "fullLine": "router.get('/slowest', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/most-requested",
+    "fullPath": "/api/v1/monitoring/performance/most-requested",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 112,
+    "fullLine": "router.get('/most-requested', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/cache",
+    "fullPath": "/api/v1/monitoring/performance/cache",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 132,
+    "fullLine": "router.get('/cache', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/reset",
+    "fullPath": "/api/v1/monitoring/performance/reset",
+    "file": "routes/performanceMonitoring.ts",
+    "line": 156,
+    "fullLine": "router.post('/reset', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/oauth/:provider/authorize",
+    "fullPath": "/api/v1/nango/oauth/:provider/authorize",
+    "file": "routes/nango.ts",
+    "line": 23,
+    "fullLine": "router.get('/oauth/:provider/authorize', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/oauth/:provider/callback",
+    "fullPath": "/api/v1/nango/oauth/:provider/callback",
+    "file": "routes/nango.ts",
+    "line": 82,
+    "fullLine": "router.get('/oauth/:provider/callback', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/oauth/:provider/refresh",
+    "fullPath": "/api/v1/nango/oauth/:provider/refresh",
+    "file": "routes/nango.ts",
+    "line": 132,
+    "fullLine": "router.post('/oauth/:provider/refresh', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/connections",
+    "fullPath": "/api/v1/nango/connections",
+    "file": "routes/nango.ts",
+    "line": 170,
+    "fullLine": "router.get('/connections', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/connections/:connectionId",
+    "fullPath": "/api/v1/nango/connections/:connectionId",
+    "file": "routes/nango.ts",
+    "line": 209,
+    "fullLine": "router.get('/connections/:connectionId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/connections/:connectionId",
+    "fullPath": "/api/v1/nango/connections/:connectionId",
+    "file": "routes/nango.ts",
+    "line": 246,
+    "fullLine": "router.delete('/connections/:connectionId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/health",
+    "fullPath": "/api/v1/email-triggers/monitoring/health",
+    "file": "routes/emailTriggerMonitoring.ts",
+    "line": 19,
+    "fullLine": "router.get('/health', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/metrics",
+    "fullPath": "/api/v1/email-triggers/monitoring/metrics",
+    "file": "routes/emailTriggerMonitoring.ts",
+    "line": 38,
+    "fullLine": "router.get('/metrics', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/health/all",
+    "fullPath": "/api/v1/email-triggers/monitoring/health/all",
+    "file": "routes/emailTriggerMonitoring.ts",
+    "line": 57,
+    "fullLine": "router.get('/health/all', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/health/:triggerId",
+    "fullPath": "/api/v1/email-triggers/monitoring/health/:triggerId",
+    "file": "routes/emailTriggerMonitoring.ts",
+    "line": 76,
+    "fullLine": "router.get('/health/:triggerId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/alerts",
+    "fullPath": "/api/v1/email-triggers/monitoring/alerts",
+    "file": "routes/emailTriggerMonitoring.ts",
+    "line": 101,
+    "fullLine": "router.get('/alerts', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/alerts/:alertId/resolve",
+    "fullPath": "/api/v1/email-triggers/monitoring/alerts/:alertId/resolve",
+    "file": "routes/emailTriggerMonitoring.ts",
+    "line": 127,
+    "fullLine": "router.post('/alerts/:alertId/resolve', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/metrics",
+    "fullPath": "/api/v1/observability/metrics",
+    "file": "routes/observability.ts",
+    "line": 22,
+    "fullLine": "router.get('/metrics', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/errors",
+    "fullPath": "/api/v1/observability/errors",
+    "file": "routes/observability.ts",
+    "line": 48,
+    "fullLine": "router.get('/errors', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/traces",
+    "fullPath": "/api/v1/observability/traces",
+    "file": "routes/observability.ts",
+    "line": 74,
+    "fullLine": "router.get('/traces', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/traces/:traceId",
+    "fullPath": "/api/v1/observability/traces/:traceId",
+    "file": "routes/observability.ts",
+    "line": 170,
+    "fullLine": "router.get('/traces/:traceId', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/traces/:traceId/export",
+    "fullPath": "/api/v1/observability/traces/:traceId/export",
+    "file": "routes/observability.ts",
+    "line": 258,
+    "fullLine": "router.get('/traces/:traceId/export', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/langfuse/metrics",
+    "fullPath": "/api/v1/observability/langfuse/metrics",
+    "file": "routes/observability.ts",
+    "line": 365,
+    "fullLine": "router.get('/langfuse/metrics', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/api-keys/",
+    "file": "routes/apiKeys.ts",
+    "line": 44,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/api-keys/:id",
+    "file": "routes/apiKeys.ts",
+    "line": 119,
+    "fullLine": "router.get('/:id', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/api-keys/",
+    "file": "routes/apiKeys.ts",
+    "line": 165,
+    "fullLine": "router.post('/', requirePermission({ resourceType: 'api_key', action: 'create' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/api-keys/:id",
+    "file": "routes/apiKeys.ts",
+    "line": 231,
+    "fullLine": "router.put('/:id', requirePermission({ resourceType: 'api_key', action: 'update' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/api-keys/:id",
+    "file": "routes/apiKeys.ts",
+    "line": 302,
+    "fullLine": "router.delete('/:id', requirePermission({ resourceType: 'api_key', action: 'delete' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/rotate",
+    "fullPath": "/api/v1/api-keys/:id/rotate",
+    "file": "routes/apiKeys.ts",
+    "line": 336,
+    "fullLine": "router.post('/:id/rotate', requirePermission({ resourceType: 'api_key', action: 'update' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/usage",
+    "fullPath": "/api/v1/api-keys/:id/usage",
+    "file": "routes/apiKeys.ts",
+    "line": 390,
+    "fullLine": "router.get('/:id/usage', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/early-access/",
+    "file": "routes/earlyAccess.ts",
+    "line": 19,
+    "fullLine": "router.post('/', async (req, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/teams/",
+    "file": "routes/teams.ts",
+    "line": 20,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/teams/:id",
+    "file": "routes/teams.ts",
+    "line": 35,
+    "fullLine": "router.get('/:id', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/monitors",
+    "fullPath": "/api/v1/osint/monitors",
+    "file": "routes/osint.ts",
+    "line": 21,
+    "fullLine": "router.get('/monitors', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/monitors/:id",
+    "fullPath": "/api/v1/osint/monitors/:id",
+    "file": "routes/osint.ts",
+    "line": 41,
+    "fullLine": "router.get('/monitors/:id', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/monitors",
+    "fullPath": "/api/v1/osint/monitors",
+    "file": "routes/osint.ts",
+    "line": 72,
+    "fullLine": "router.post('/monitors', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/monitors/:id",
+    "fullPath": "/api/v1/osint/monitors/:id",
+    "file": "routes/osint.ts",
+    "line": 109,
+    "fullLine": "router.put('/monitors/:id', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/monitors/:id",
+    "fullPath": "/api/v1/osint/monitors/:id",
+    "file": "routes/osint.ts",
+    "line": 151,
+    "fullLine": "router.delete('/monitors/:id', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/monitors/:id/trigger",
+    "fullPath": "/api/v1/osint/monitors/:id/trigger",
+    "file": "routes/osint.ts",
+    "line": 176,
+    "fullLine": "router.post('/monitors/:id/trigger', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/monitors/:id/results",
+    "fullPath": "/api/v1/osint/monitors/:id/results",
+    "file": "routes/osint.ts",
+    "line": 210,
+    "fullLine": "router.get('/monitors/:id/results', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/results",
+    "fullPath": "/api/v1/osint/results",
+    "file": "routes/osint.ts",
+    "line": 265,
+    "fullLine": "router.get('/results', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/stats",
+    "fullPath": "/api/v1/osint/stats",
+    "file": "routes/osint.ts",
+    "line": 313,
+    "fullLine": "router.get('/stats', async (req: AuthRequest, res: Response) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/roles/",
+    "file": "routes/roles.ts",
+    "line": 21,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/roles/:id",
+    "file": "routes/roles.ts",
+    "line": 47,
+    "fullLine": "router.get('/:id', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/permissions/all",
+    "fullPath": "/api/v1/roles/permissions/all",
+    "file": "routes/roles.ts",
+    "line": 185,
+    "fullLine": "router.get('/permissions/all', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/me",
+    "fullPath": "/api/v1/users/me",
+    "file": "routes/users.ts",
+    "line": 36,
+    "fullLine": "router.get('/me', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/me",
+    "fullPath": "/api/v1/users/me",
+    "file": "routes/users.ts",
+    "line": 71,
+    "fullLine": "router.put('/me', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/me/avatar",
+    "fullPath": "/api/v1/users/me/avatar",
+    "file": "routes/users.ts",
+    "line": 130,
+    "fullLine": "router.post('/me/avatar', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/me/preferences",
+    "fullPath": "/api/v1/users/me/preferences",
+    "file": "routes/users.ts",
+    "line": 195,
+    "fullLine": "router.get('/me/preferences', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/me/preferences",
+    "fullPath": "/api/v1/users/me/preferences",
+    "file": "routes/users.ts",
+    "line": 223,
+    "fullLine": "router.put('/me/preferences', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/me/activity",
+    "fullPath": "/api/v1/users/me/activity",
+    "file": "routes/users.ts",
+    "line": 283,
+    "fullLine": "router.get('/me/activity', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/code-agents/",
+    "file": "routes/codeAgents.ts",
+    "line": 15,
+    "fullLine": "router.post('/', authenticate, setOrganization, requirePermission({ resourceType: 'code_agent', action: 'create' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/code-agents/",
+    "file": "routes/codeAgents.ts",
+    "line": 48,
+    "fullLine": "router.get('/', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/code-agents/:id",
+    "file": "routes/codeAgents.ts",
+    "line": 80,
+    "fullLine": "router.get('/:id', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/code-agents/:id",
+    "file": "routes/codeAgents.ts",
+    "line": 108,
+    "fullLine": "router.put('/:id', authenticate, setOrganization, requirePermission({ resourceType: 'code_agent', action: 'update' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/code-agents/:id",
+    "file": "routes/codeAgents.ts",
+    "line": 142,
+    "fullLine": "router.delete('/:id', authenticate, setOrganization, requirePermission({ resourceType: 'code_agent', action: 'delete' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/versions",
+    "fullPath": "/api/v1/code-agents/:id/versions",
+    "file": "routes/codeAgents.ts",
+    "line": 158,
+    "fullLine": "router.get('/:id/versions', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/export-tool",
+    "fullPath": "/api/v1/code-agents/:id/export-tool",
+    "file": "routes/codeAgents.ts",
+    "line": 174,
+    "fullLine": "router.post('/:id/export-tool', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/analytics",
+    "fullPath": "/api/v1/code-agents/analytics",
+    "file": "routes/codeAgents.ts",
+    "line": 195,
+    "fullLine": "router.get('/analytics', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/register-tool",
+    "fullPath": "/api/v1/code-agents/:id/register-tool",
+    "file": "routes/codeAgents.ts",
+    "line": 343,
+    "fullLine": "router.post('/:id/register-tool', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/execute",
+    "fullPath": "/api/v1/code-agents/:id/execute",
+    "file": "routes/codeAgents.ts",
+    "line": 364,
+    "fullLine": "router.post('/:id/execute', authenticate, setOrganization, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/registry/public",
+    "fullPath": "/api/v1/code-agents/registry/public",
+    "file": "routes/codeAgents.ts",
+    "line": 432,
+    "fullLine": "router.get('/registry/public', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/deploy-mcp",
+    "fullPath": "/api/v1/code-agents/:id/deploy-mcp",
+    "file": "routes/codeAgents.ts",
+    "line": 452,
+    "fullLine": "router.post('/:id/deploy-mcp', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/suggestions",
+    "fullPath": "/api/v1/code-agents/suggestions",
+    "file": "routes/codeAgents.ts",
+    "line": 509,
+    "fullLine": "router.post('/suggestions', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/review",
+    "fullPath": "/api/v1/code-agents/review",
+    "file": "routes/codeAgents.ts",
+    "line": 544,
+    "fullLine": "router.post('/review', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/check-escape",
+    "fullPath": "/api/v1/code-agents/check-escape",
+    "file": "routes/codeAgents.ts",
+    "line": 578,
+    "fullLine": "router.post('/check-escape', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/connectors/",
+    "file": "routes/connectors.ts",
+    "line": 18,
+    "fullLine": "router.get('/', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/connectors/:id",
+    "file": "routes/connectors.ts",
+    "line": 32,
+    "fullLine": "router.get('/:id', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/actions/:actionId/execute",
+    "fullPath": "/api/v1/connectors/:id/actions/:actionId/execute",
+    "file": "routes/connectors.ts",
+    "line": 47,
+    "fullLine": "router.post('/:id/actions/:actionId/execute', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/credentials",
+    "fullPath": "/api/v1/connectors/credentials",
+    "file": "routes/connectors.ts",
+    "line": 103,
+    "fullLine": "router.get('/credentials', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/connections",
+    "fullPath": "/api/v1/connectors/connections",
+    "file": "routes/connectors.ts",
+    "line": 129,
+    "fullLine": "router.get('/connections', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/connect",
+    "fullPath": "/api/v1/connectors/:id/connect",
+    "file": "routes/connectors.ts",
+    "line": 152,
+    "fullLine": "router.post('/:id/connect', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/disconnect",
+    "fullPath": "/api/v1/connectors/:id/disconnect",
+    "file": "routes/connectors.ts",
+    "line": 192,
+    "fullLine": "router.post('/:id/disconnect', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/credentials/:id",
+    "fullPath": "/api/v1/connectors/credentials/:id",
+    "file": "routes/connectors.ts",
+    "line": 230,
+    "fullLine": "router.delete('/credentials/:id', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/credentials",
+    "fullPath": "/api/v1/connectors/credentials",
+    "file": "routes/connectors.ts",
+    "line": 266,
+    "fullLine": "router.post('/credentials', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/register",
+    "fullPath": "/api/v1/connectors/register",
+    "file": "routes/connectors.ts",
+    "line": 329,
+    "fullLine": "router.post('/register', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/connectors/:id",
+    "file": "routes/connectors.ts",
+    "line": 359,
+    "fullLine": "router.put('/:id', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/connectors/:id",
+    "file": "routes/connectors.ts",
+    "line": 388,
+    "fullLine": "router.delete('/:id', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/gmail/authorize",
+    "fullPath": "/api/v1/email-oauth/gmail/authorize",
+    "file": "routes/emailOAuth.ts",
+    "line": 20,
+    "fullLine": "router.get('/gmail/authorize', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/gmail/callback",
+    "fullPath": "/api/v1/email-oauth/gmail/callback",
+    "file": "routes/emailOAuth.ts",
+    "line": 56,
+    "fullLine": "router.get('/gmail/callback', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/retrieve/:token",
+    "fullPath": "/api/v1/email-oauth/retrieve/:token",
+    "file": "routes/emailOAuth.ts",
+    "line": 126,
+    "fullLine": "router.get('/retrieve/:token', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/outlook/authorize",
+    "fullPath": "/api/v1/email-oauth/outlook/authorize",
+    "file": "routes/emailOAuth.ts",
+    "line": 162,
+    "fullLine": "router.get('/outlook/authorize', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/outlook/callback",
+    "fullPath": "/api/v1/email-oauth/outlook/callback",
+    "file": "routes/emailOAuth.ts",
+    "line": 198,
+    "fullLine": "router.get('/outlook/callback', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/sync",
+    "fullPath": "/api/v1/auth/sync",
+    "file": "routes/auth.ts",
+    "line": 14,
+    "fullLine": "router.post('/sync', async (req, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/me",
+    "fullPath": "/api/v1/auth/me",
+    "file": "routes/auth.ts",
+    "line": 99,
+    "fullLine": "router.get('/me', async (req, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/workflow/:workflowId",
+    "fullPath": "/api/v1/executions/workflow/:workflowId",
+    "file": "routes/executions.ts",
+    "line": 23,
+    "fullLine": "router.get('/workflow/:workflowId', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/execute",
+    "fullPath": "/api/v1/executions/execute",
+    "file": "routes/executions.ts",
+    "line": 65,
+    "fullLine": "router.post('/execute', authenticate, requirePermission({ resourceType: 'workflow', action: 'execute' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/executions/:id",
+    "file": "routes/executions.ts",
+    "line": 154,
+    "fullLine": "router.get('/:id', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/resume",
+    "fullPath": "/api/v1/executions/:id/resume",
+    "file": "routes/executions.ts",
+    "line": 225,
+    "fullLine": "router.post('/:id/resume', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/step",
+    "fullPath": "/api/v1/executions/:id/step",
+    "file": "routes/executions.ts",
+    "line": 263,
+    "fullLine": "router.post('/:id/step', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/variables/:nodeId",
+    "fullPath": "/api/v1/executions/:id/variables/:nodeId",
+    "file": "routes/executions.ts",
+    "line": 300,
+    "fullLine": "router.get('/:id/variables/:nodeId', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id/variables/:nodeId",
+    "fullPath": "/api/v1/executions/:id/variables/:nodeId",
+    "file": "routes/executions.ts",
+    "line": 350,
+    "fullLine": "router.put('/:id/variables/:nodeId', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/export",
+    "fullPath": "/api/v1/executions/:id/export",
+    "file": "routes/executions.ts",
+    "line": 428,
+    "fullLine": "router.get('/:id/export', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/steps",
+    "fullPath": "/api/v1/executions/:id/steps",
+    "file": "routes/executions.ts",
+    "line": 523,
+    "fullLine": "router.get('/:id/steps', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/steps/:stepId",
+    "fullPath": "/api/v1/executions/:id/steps/:stepId",
+    "file": "routes/executions.ts",
+    "line": 560,
+    "fullLine": "router.get('/:id/steps/:stepId', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/replay",
+    "fullPath": "/api/v1/executions/:id/replay",
+    "file": "routes/executions.ts",
+    "line": 602,
+    "fullLine": "router.post('/:id/replay', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/replay/:stepId",
+    "fullPath": "/api/v1/executions/:id/replay/:stepId",
+    "file": "routes/executions.ts",
+    "line": 640,
+    "fullLine": "router.post('/:id/replay/:stepId', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/:id/human-prompt/:nodeId/respond",
+    "fullPath": "/api/v1/executions/:id/human-prompt/:nodeId/respond",
+    "file": "routes/executions.ts",
+    "line": 682,
+    "fullLine": "router.post('/:id/human-prompt/:nodeId/respond', authenticate, async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "fullPath": "/api/v1/alerts/",
+    "file": "routes/alerts.ts",
+    "line": 47,
+    "fullLine": "router.get('/', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/alerts/:id",
+    "file": "routes/alerts.ts",
+    "line": 69,
+    "fullLine": "router.get('/:id', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/",
+    "fullPath": "/api/v1/alerts/",
+    "file": "routes/alerts.ts",
+    "line": 96,
+    "fullLine": "router.post('/', requirePermission({ resourceType: 'alert', action: 'create' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PUT",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/alerts/:id",
+    "file": "routes/alerts.ts",
+    "line": 131,
+    "fullLine": "router.put('/:id', requirePermission({ resourceType: 'alert', action: 'update' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/:id",
+    "fullPath": "/api/v1/alerts/:id",
+    "file": "routes/alerts.ts",
+    "line": 166,
+    "fullLine": "router.delete('/:id', requirePermission({ resourceType: 'alert', action: 'delete' }), async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/:id/toggle",
+    "fullPath": "/api/v1/alerts/:id/toggle",
+    "file": "routes/alerts.ts",
+    "line": 194,
+    "fullLine": "router.patch('/:id/toggle', async (req: AuthRequest, res) => {"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/:id/history",
+    "fullPath": "/api/v1/alerts/:id/history",
+    "file": "routes/alerts.ts",
+    "line": 229,
+    "fullLine": "router.get('/:id/history', async (req: AuthRequest, res) => {"
+  }
+]
