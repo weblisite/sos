@@ -205,10 +205,15 @@ This document tracks the synchronization between frontend API calls and backend 
 | `PerformanceMonitoring.tsx` | `GET /monitoring/performance/endpoint/:method/:endpoint` | ✅ `GET /api/v1/monitoring/performance/endpoint/:method/:endpoint` | ✅ Implemented | Endpoint-specific metrics |
 | `PerformanceMonitoring.tsx` | `POST /monitoring/performance/reset` | ✅ `POST /api/v1/monitoring/performance/reset` | ✅ Implemented | Reset metrics |
 
-### Email Trigger Monitoring
+### Email Trigger Monitoring ✅ (All Implemented)
 | Frontend Component | API Call | Backend Route | Status | Notes |
 |-------------------|----------|---------------|--------|-------|
-| `EmailTriggerMonitoring.tsx` | `GET /email-triggers/monitoring` | ✅ Exists | ⚠️ May need frontend integration | Check if frontend calls this |
+| `EmailTriggerMonitoring.tsx` | `GET /email-triggers/monitoring/health` | ✅ `GET /api/v1/email-triggers/monitoring/health` | ✅ Implemented | Health summary |
+| `EmailTriggerMonitoring.tsx` | `GET /email-triggers/monitoring/health/all` | ✅ `GET /api/v1/email-triggers/monitoring/health/all` | ✅ Implemented | All health statuses |
+| `EmailTriggerMonitoring.tsx` | `GET /email-triggers/monitoring/alerts` | ✅ `GET /api/v1/email-triggers/monitoring/alerts` | ✅ Implemented | Monitoring alerts |
+| `EmailTriggerMonitoring.tsx` | `GET /email-triggers/monitoring/metrics` | ✅ `GET /api/v1/email-triggers/monitoring/metrics` | ✅ Implemented | Monitoring metrics |
+| `EmailTriggerMonitoring.tsx` | `GET /email-triggers/monitoring/health/:id` | ✅ `GET /api/v1/email-triggers/monitoring/health/:id` | ✅ Implemented | Specific trigger health |
+| `EmailTriggerMonitoring.tsx` | `POST /email-triggers/monitoring/alerts/:id/resolve` | ✅ `POST /api/v1/email-triggers/monitoring/alerts/:id/resolve` | ✅ Implemented | Resolve alert |
 
 ### Preferences ✅ (All Implemented)
 | Frontend Component | API Call | Backend Route | Status | Notes |
