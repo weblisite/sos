@@ -6,6 +6,12 @@ services:
     region: oregon
     plan: standard  # Upgraded plan with more CPU and space
     buildCommand: npm ci --legacy-peer-deps --no-audit --no-fund && npm run build
+    # Note: Build process:
+    # 1. Installs dependencies with legacy-peer-deps (handles peer dependency conflicts)
+    # 2. Builds shared package (TypeScript compilation)
+    # 3. Builds backend (TypeScript compilation)
+    # 4. Builds frontend (Vite build)
+    # 5. Copies frontend/dist to backend/public for serving
     startCommand: npm start
     healthCheckPath: /health
     # Build filters: Only deploy when backend/shared code changes (monorepo optimization)
