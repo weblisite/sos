@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
+// Socket.IO removed for serverless compatibility - using polling instead
+// import { io, Socket } from 'socket.io-client';
+import { pollExecutionStatus } from '../lib/polling';
 import { queryKeys } from '../lib/queryKeys';
 import api from '../lib/api';
 
@@ -43,113 +45,101 @@ export default function CopilotAgent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<string>('auto'); // 'auto' for automatic routing
-  const [isConnected, setIsConnected] = useState(false);
-  const [currentExecution, setCurrentExecution] = useState<AgentExecution | null>(null);
+  const [isConnected, setIsConnected] = useState(true); // Always connected with polling
+  const [currentExecution, setCurrentExecution] = useState<AgentExecution | null>(null);                                                                        
   const [showFlowEditor, setShowFlowEditor] = useState(false);
   const [suggestedWorkflow, setSuggestedWorkflow] = useState<any>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const pollingCancelRef = useRef<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Initialize WebSocket connection
+  // Poll for execution status when currentExecution is set
   useEffect(() => {
-    // Use window.location.origin if VITE_API_URL is empty (when frontend is served from backend)
-    const apiUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4000');
-    const socket = io(apiUrl, {
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-    });
+    if (!currentExecution?.executionId) return;
 
-    socketRef.current = socket;
+    // Cancel any existing polling
+    if (pollingCancelRef.current) {
+      pollingCancelRef.current();
+    }
 
-    socket.on('connect', () => {
-      console.log('✅ WebSocket connected');
-      setIsConnected(true);
-    });
+    // Start polling for execution status
+    const cancelPoll = pollExecutionStatus(currentExecution.executionId, {
+      interval: 2000, // Poll every 2 seconds
+      maxAttempts: 300, // Poll for up to 10 minutes (300 * 2s)
+      onUpdate: (data: any) => {
+        // Update execution status
+        setCurrentExecution({
+          executionId: data.id,
+          status: data.status,
+          output: data.result?.output || data.output,
+          error: data.error,
+          metadata: data.result?.metadata || data.metadata,
+        });
 
-    socket.on('disconnect', () => {
-      console.log('❌ WebSocket disconnected');
-      setIsConnected(false);
-    });
+        // Update last assistant message if status changed
+        if (data.status === 'running' || data.status === 'completed' || data.status === 'failed') {
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === currentExecution.executionId) {
+              if (data.status === 'completed' && data.result?.output) {
+                lastMessage.content = data.result.output;
+              } else if (data.status === 'failed' && data.error) {
+                lastMessage.content = `Error: ${data.error}`;
+              }
+              if (data.result?.metadata) {
+                lastMessage.metadata = { ...lastMessage.metadata, ...data.result.metadata };
+              }
+              return newMessages;
+            }
+            return prev;
+          });
+        }
+      },
+      onComplete: (data: any) => {
+        // Execution completed
+        setCurrentExecution({
+          executionId: data.id,
+          status: data.status === 'completed' ? 'completed' : 'failed',
+          output: data.result?.output || data.output,
+          error: data.error,
+          metadata: data.result?.metadata || data.metadata,
+        });
 
-    // Listen for agent execution events
-    socket.on('agent:execution:start', (data: { executionId: string; query: string }) => {
-      setCurrentExecution({
-        executionId: data.executionId,
-        status: 'running',
-      });
-    });
-
-    socket.on('agent:execution:update', (data: { executionId: string; chunk: string; metadata?: Record<string, unknown> }) => {
-      // Add streaming chunk to last assistant message
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === data.executionId) {
-          lastMessage.content += chunk;
-          if (data.metadata) {
-            lastMessage.metadata = { ...lastMessage.metadata, ...data.metadata };
+        // Update last assistant message with final output
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const lastMessage = newMessages[newMessages.length - 1];
+          if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === currentExecution.executionId) {
+            if (data.status === 'completed' && data.result?.output) {
+              lastMessage.content = data.result.output;
+            } else if (data.status === 'failed' && data.error) {
+              lastMessage.content = `Error: ${data.error}`;
+            }
+            if (data.result?.metadata) {
+              lastMessage.metadata = { ...lastMessage.metadata, ...data.result.metadata };
+            }
+            return newMessages;
           }
           return newMessages;
-        }
-        return prev;
-      });
+        });
+      },
+      onError: (error: Error) => {
+        console.error('Polling error:', error);
+        setCurrentExecution((prev) => prev ? { ...prev, status: 'failed', error: error.message } : null);
+      },
     });
 
-    socket.on('agent:execution:complete', (data: { executionId: string; output: string; metadata?: Record<string, unknown>; suggestedWorkflow?: any }) => {
-      setCurrentExecution({
-        executionId: data.executionId,
-        status: 'completed',
-        output: data.output,
-        metadata: data.metadata,
-      });
-
-      // Check if workflow was suggested
-      if (data.suggestedWorkflow) {
-        setSuggestedWorkflow(data.suggestedWorkflow);
-      }
-
-      // Update last assistant message with final output
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === data.executionId) {
-          lastMessage.content = data.output;
-          if (data.metadata) {
-            lastMessage.metadata = { ...lastMessage.metadata, ...data.metadata };
-          }
-          return newMessages;
-        }
-        return newMessages;
-      });
-    });
-
-    socket.on('agent:execution:error', (data: { executionId: string; error: string }) => {
-      setCurrentExecution({
-        executionId: data.executionId,
-        status: 'failed',
-        error: data.error,
-      });
-
-      // Update last assistant message with error
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === data.executionId) {
-          lastMessage.content = `Error: ${data.error}`;
-          return newMessages;
-        }
-        return prev;
-      });
-    });
+    pollingCancelRef.current = cancelPoll;
 
     return () => {
-      socket.disconnect();
+      if (pollingCancelRef.current) {
+        pollingCancelRef.current();
+        pollingCancelRef.current = null;
+      }
     };
-  }, []);
+  }, [currentExecution?.executionId]);
 
   // Fetch available agent frameworks
   const { data: frameworks } = useQuery({
@@ -180,11 +170,19 @@ export default function CopilotAgent() {
         timestamp: new Date(),
       };
 
-      // Add assistant message placeholder (will be updated via WebSocket)
+      // Set current execution to start polling
+      if (data.executionId) {
+        setCurrentExecution({
+          executionId: data.executionId,
+          status: 'running',
+        });
+      }
+
+      // Add assistant message placeholder (will be updated via polling)
       const assistantMessage: Message = {
         id: data.executionId || `assistant_${Date.now()}`,
         role: 'assistant',
-        content: '',
+        content: 'Processing...',
         timestamp: new Date(),
         metadata: {
           agentId: data.agentId,
@@ -263,8 +261,11 @@ export default function CopilotAgent() {
                 <span className={`w-2 h-2 rounded-full mr-2 ${
                   isConnected ? 'bg-green-500' : 'bg-red-500'
                 }`}></span>
-                {isConnected ? 'Connected' : 'Disconnected'}
+                {isConnected ? 'Connected (Polling)' : 'Disconnected'}
               </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Using polling for real-time updates (serverless compatible)
+              </p>
             </div>
 
             {currentExecution && (
